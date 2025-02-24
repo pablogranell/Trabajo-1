@@ -1,13 +1,15 @@
 import * as THREE from 'three';
 
-class LoadingManager {
+export class LoadingManager {
     constructor() {
         this.manager = new THREE.LoadingManager();
+        this.textureLoader = new THREE.TextureLoader(this.manager);
         this.loadingScreen = document.getElementById('loading-screen');
         this.loadingBar = document.getElementById('loading-bar');
         this.loadingPercentage = document.getElementById('loading-percentage');
         this.isLoading = true;
         this.setupLoadingManager();
+        this.preloadTextures();
     }
 
     setupLoadingManager() {
@@ -37,6 +39,16 @@ class LoadingManager {
     getManager() {
         return this.manager;
     }
-}
 
-export { LoadingManager };
+    preloadTextures() {
+        // Cargar texturas en la pantalla de carga
+        for(let i = 0; i < 200; i++) {
+            this.textureLoader.load('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAwAEAAAIBRAA7');
+            this.textureLoader.load('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAAdBAAEAAAIBRAA7');
+            this.textureLoader.load('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBrRAA7');
+            this.textureLoader.load('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAArIBRAA7');
+            this.textureLoader.load('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAw2AAIBRAA7');
+            this.textureLoader.load('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRArA7');
+        }
+    }  
+}

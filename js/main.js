@@ -1,32 +1,17 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
 import { LoadingManager } from './loaders.js';
+import { sceneInit } from './world.js';
+import { update } from './update.js';
 
 class Scene {
     constructor() {
-        this.loading();
+        this.loadingManager = new LoadingManager();
         this.init();
         this.setupControls();
         this.setupEventListeners();
-        this.sceneInit();
+        sceneInit(this.scene);
         this.animate();
-    }
-
-    loading() {
-        this.loadingManager = new LoadingManager();
-        
-        const textureLoader = new THREE.TextureLoader(this.loadingManager.getManager());
-        
-        // Cargar texturas en la pantalla de carga
-        for(let i = 0; i < 200; i++) {
-            textureLoader.load('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAwAEAAAIBRAA7');
-            textureLoader.load('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAAdBAAEAAAIBRAA7');
-            textureLoader.load('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBrRAA7');
-            textureLoader.load('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAArIBRAA7');
-            textureLoader.load('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAw2AAIBRAA7');
-            textureLoader.load('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRArA7');
-            
-        }
     }
 
     init() {
@@ -52,7 +37,7 @@ class Scene {
 
     setupControls() {
         this.controls = new PointerLockControls(this.camera, document.body);
-
+        //Contenedor de la escena
         const sceneContainer = document.getElementById('scene-container');
         sceneContainer.style.filter = 'blur(5px)';
         sceneContainer.style.transition = 'filter 1.2s';
@@ -60,18 +45,19 @@ class Scene {
         startButton.id = 'start-button';
         startButton.textContent = 'Empezar';
         document.body.appendChild(startButton);
-
+        // Boton para empezar el juego
         startButton.addEventListener('click', () => {
             this.controls.lock();
             startButton.style.display = 'none';
             startButton.textContent = 'Continuar';
         });
-        
+        //Boton para continuar el juego
         this.controls.addEventListener('lock', () => {
             sceneContainer.style.filter = 'none';
             startButton.style.display = 'none';
             this.isPaused = false;
         });
+        //Boton para parar el juego
         this.controls.addEventListener('unlock', () => {
             sceneContainer.style.filter = 'blur(5px)';
             startButton.style.opacity = '0';
@@ -84,7 +70,7 @@ class Scene {
             this.velocity.set(0, 0, 0);
             this.moveForward = this.moveBackward = this.moveLeft = this.moveRight = false;
         });
-
+        // Verifica si la pantalla de carga esta oculta
         const loadingScreen = document.getElementById('loading-screen');
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
@@ -98,13 +84,13 @@ class Scene {
     }
 
     setupEventListeners() {
+        // Para ajustar la camara a la pantalla
         window.addEventListener('resize', () => {
             this.camera.aspect = window.innerWidth / window.innerHeight;
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(window.innerWidth, window.innerHeight);
         });
-
-        // Movement controls
+        // Movimiento del jugador
         const onKeyDown = (event) => {
             switch (event.code) {
                 case 'ArrowUp':
@@ -125,7 +111,7 @@ class Scene {
                     break;
             }
         };
-
+        // Movimiento del jugador
         const onKeyUp = (event) => {
             switch (event.code) {
                 case 'ArrowUp':
@@ -151,64 +137,11 @@ class Scene {
         document.addEventListener('keyup', onKeyUp);
     }
 
-    sceneInit() {
-        const floorGeometry = new THREE.PlaneGeometry(20, 20);
-        const floorMaterial = new THREE.MeshBasicMaterial({ 
-            color: 0x808080,
-            side: THREE.DoubleSide 
-        });
-        const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-        floor.rotation.x = Math.PI / 2;
-        this.scene.add(floor);
-
-        // Add some cubes for reference
-        for (let i = 0; i < 10; i++) {
-            const geometry = new THREE.BoxGeometry();
-            const material = new THREE.MeshBasicMaterial({ color: Math.random() * 0xffffff });
-            const cube = new THREE.Mesh(geometry, material);
-            cube.position.x = (Math.random() - 0.5) * 10;
-            cube.position.z = (Math.random() - 0.5) * 10;
-            cube.position.y = 0.5;
-            this.scene.add(cube);
-        }
-
-        // Add ambient light
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-        this.scene.add(ambientLight);
-    }
-
-    updateMovement() {
-        if (this.isPaused) return;
-
-        const time = performance.now();
-        const delta = (time - this.prevTime) / 1000;
-
-        this.velocity.x -= this.velocity.x * 10.0 * delta;
-        this.velocity.z -= this.velocity.z * 10.0 * delta;
-
-        this.direction.z = Number(this.moveForward) - Number(this.moveBackward);
-        this.direction.x = Number(this.moveRight) - Number(this.moveLeft);
-        this.direction.normalize();
-
-        if (this.moveForward || this.moveBackward) {
-            this.velocity.z -= this.direction.z * 50.0 * delta;
-        }
-        if (this.moveLeft || this.moveRight) {
-            this.velocity.x -= this.direction.x * 50.0 * delta;
-        }
-
-        this.controls.moveRight(-this.velocity.x * delta);
-        this.controls.moveForward(-this.velocity.z * delta);
-
-        this.prevTime = time;
-    }
-
     animate() {
         requestAnimationFrame(this.animate.bind(this));
-        this.updateMovement();
+        update(this);
         this.renderer.render(this.scene, this.camera);
     }
 }
 
-// Start the application
 new Scene();
