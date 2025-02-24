@@ -54,7 +54,7 @@ class Scene {
 
         const sceneContainer = document.getElementById('scene-container');
         sceneContainer.style.filter = 'blur(5px)';
-        sceneContainer.style.transition = 'filter 0.5s';
+        sceneContainer.style.transition = 'filter 1.2s';
         const startButton = document.createElement('button');
         startButton.textContent = 'Empezar';
         startButton.style.position = 'absolute';
@@ -68,6 +68,7 @@ class Scene {
         startButton.style.borderColor = 'white';
         startButton.style.borderWidth = '2px';
         startButton.style.borderStyle = 'solid';
+        startButton.style.transition = 'opacity 0.2s';
         document.body.appendChild(startButton);
 
         startButton.addEventListener('click', () => {
@@ -77,16 +78,21 @@ class Scene {
         });
         
         this.controls.addEventListener('lock', () => {
+            sceneContainer.style.filter = 'none';
             startButton.style.display = 'none';
             this.isPaused = false;
-            sceneContainer.style.filter = 'none';
         });
         this.controls.addEventListener('unlock', () => {
-            startButton.style.display = 'block';
-            this.isPaused = true;
             sceneContainer.style.filter = 'blur(5px)';
+            startButton.style.opacity = '0';
+            startButton.style.display = 'block';
+            setTimeout(() => {
+                startButton.style.opacity = '1';
+            }, 1000);
+            this.isPaused = true;
+            //Para que el jugador no se mueva
             this.velocity.set(0, 0, 0);
-            
+            this.moveForward = this.moveBackward = this.moveLeft = this.moveRight = false;
         });
 
         const loadingScreen = document.getElementById('loading-screen');
