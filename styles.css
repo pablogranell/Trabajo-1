@@ -1,0 +1,38 @@
+body {
+    margin: 0;
+    overflow: hidden;
+}
+
+#loading-screen {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    transition: opacity 1s;
+}
+
+.loading-bar-container {
+    width: 50%;
+    height: 20px;
+    background: #1a1a1a;
+    border-radius: 10px;
+    margin-bottom: 30px;
+}
+
+#loading-bar {
+    height: 100%;
+    background: #4CAF50;
+    border-radius: 10px;
+    transition: width 1s;
+}
+
+#loading-percentage {
+    color: white;
+    font: 40px Arial;
+}
+
+
