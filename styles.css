@@ -35,4 +35,17 @@ body {
     font: 40px Arial;
 }
 
+#start-button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 40px 80px;
+    border-radius: 50px;
+    font-size: 40px;
+    font-weight: bold;
+    border: 2px solid white;
+    transition: opacity 0.2s;
+}
+
 

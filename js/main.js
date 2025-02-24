@@ -30,11 +30,14 @@ class Scene {
     }
 
     init() {
-        // Inicializar motor de renderizado
+        // Inicializar three.js
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0x87ceeb);
         this.camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight);
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('scene-container').appendChild(this.renderer.domElement);
+        //Estado inicial
         this.controls = null;
         this.moveForward = false;
         this.moveBackward = false;
@@ -43,8 +46,6 @@ class Scene {
         this.velocity = new THREE.Vector3();
         this.direction = new THREE.Vector3();
         this.prevTime = performance.now();
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        document.getElementById('scene-container').appendChild(this.renderer.domElement);
         this.camera.position.y = 1.6; // Altura de la camara, mas o menos
         this.isPaused = false;
     }
@@ -56,19 +57,8 @@ class Scene {
         sceneContainer.style.filter = 'blur(5px)';
         sceneContainer.style.transition = 'filter 1.2s';
         const startButton = document.createElement('button');
+        startButton.id = 'start-button';
         startButton.textContent = 'Empezar';
-        startButton.style.position = 'absolute';
-        startButton.style.top = '50%';
-        startButton.style.left = '50%';
-        startButton.style.transform = 'translate(-50%, -50%)';
-        startButton.style.padding = '40px 80px';
-        startButton.style.borderRadius = '50px';
-        startButton.style.fontSize = '40px';
-        startButton.style.fontWeight = 'bold';
-        startButton.style.borderColor = 'white';
-        startButton.style.borderWidth = '2px';
-        startButton.style.borderStyle = 'solid';
-        startButton.style.transition = 'opacity 0.2s';
         document.body.appendChild(startButton);
 
         startButton.addEventListener('click', () => {
