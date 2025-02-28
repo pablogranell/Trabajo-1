@@ -6,30 +6,26 @@ let time = 0;
 
 // Create a grass blade geometry
 function createGrassBlade() {
-    const height = 0.4 + Math.random() * 0.5; // More height variation
+    const height = 0.4 + Math.random() * 0.5;
     const baseWidth = 0.08 + Math.random() * 0.04;
     const shape = new THREE.Shape();
     
-    // Create irregular base
     const baseVariation = (Math.random() - 0.5) * 0.02;
     shape.moveTo(-baseWidth/2 + baseVariation, 0);
     shape.lineTo(baseWidth/2 + baseVariation, 0);
     
-    // Create curvy blade with control points
     const cp1x = (Math.random() - 0.5) * 0.2;
     const cp1y = height * 0.3;
     const cp2x = (Math.random() - 0.5) * 0.2;
     const cp2y = height * 0.6;
     const tipVariation = (Math.random() - 0.5) * 0.1;
     
-    // Right side curve
     shape.bezierCurveTo(
         baseWidth/2 + cp1x, cp1y,
         baseWidth/4 + cp2x, cp2y,
         baseWidth/8 + tipVariation, height
     );
     
-    // Left side curve
     shape.bezierCurveTo(
         -baseWidth/4 + cp2x, cp2y,
         -baseWidth/2 + cp1x, cp1y,
@@ -40,74 +36,195 @@ function createGrassBlade() {
     return geometry;
 }
 
-// Create a flower geometry
-function createFlower() {
+// Create different types of trees
+function createTree(type = Math.floor(Math.random() * 3)) {
+    const group = new THREE.Group();
+    let trunkMaterial = new THREE.MeshPhongMaterial({ 
+        color: 0x4a2f21,
+        flatShading: true 
+    });
+
+    switch(type) {
+        case 0: // Pine tree
+            const pineHeight = 2 + Math.random();
+            const trunk = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.15, 0.2, pineHeight, 8),
+                trunkMaterial
+            );
+            trunk.position.y = pineHeight/2;
+            group.add(trunk);
+
+            const levels = 4 + Math.floor(Math.random() * 3);
+            const coneSpacing = 0.5;
+            const baseHeight = pineHeight + 0.2;
+            
+            for(let i = 0; i < levels; i++) {
+                const coneHeight = 0.8 + (i * 0.1); // Larger at bottom
+                const coneRadius = 0.7 + (i * 0.15); // Wider at bottom
+                const cone = new THREE.Mesh(
+                    new THREE.ConeGeometry(coneRadius, coneHeight, 8),
+                    new THREE.MeshStandardMaterial({
+                        color: 0x2d5a27,
+                        flatShading: true,
+                        roughness: 1
+                    })
+                );
+                // Position cones from top to bottom
+                cone.position.y = baseHeight - (i * coneSpacing);
+                group.add(cone);
+            }
+            break;
+
+        case 1: // Oak tree
+            const oakTrunk = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.25, 0.35, 2, 8),
+                trunkMaterial
+            );
+            oakTrunk.position.y = 1;
+            group.add(oakTrunk);
+
+            const foliageGeometry = new THREE.SphereGeometry(1.2, 8, 6);
+            const foliageMaterial = new THREE.MeshStandardMaterial({
+                color: 0x3d8e40,
+                flatShading: true,
+                roughness: 1
+            });
+
+            for(let i = 0; i < 3; i++) {
+                const foliage = new THREE.Mesh(foliageGeometry, foliageMaterial);
+                foliage.position.set(
+                    (Math.random() - 0.5) * 0.8,
+                    2 + (Math.random() - 0.5) * 0.5,
+                    (Math.random() - 0.5) * 0.8
+                );
+                foliage.scale.set(0.8, 0.6, 0.8);
+                group.add(foliage);
+            }
+            break;
+
+        case 2: // Birch tree
+            const birchTrunk = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.15, 0.2, 3, 8),
+                new THREE.MeshPhongMaterial({ 
+                    color: 0xd3d3d3,
+                    flatShading: true 
+                })
+            );
+            birchTrunk.position.y = 1.5;
+            group.add(birchTrunk);
+
+            const leafGeometry = new THREE.IcosahedronGeometry(0.8, 0);
+            const leafMaterial = new THREE.MeshStandardMaterial({
+                color: 0x98fb98,
+                flatShading: true,
+                roughness: 1
+            });
+
+            for(let i = 0; i < 4; i++) {
+                const leaves = new THREE.Mesh(leafGeometry, leafMaterial);
+                leaves.position.set(
+                    (Math.random() - 0.5) * 1.2,
+                    2.5 + (Math.random() - 0.5) * 0.8,
+                    (Math.random() - 0.5) * 1.2
+                );
+                leaves.scale.set(0.6, 0.8, 0.6);
+                leaves.rotation.set(
+                    Math.random() * Math.PI,
+                    Math.random() * Math.PI,
+                    Math.random() * Math.PI
+                );
+                group.add(leaves);
+            }
+            break;
+    }
+    return group;
+}
+
+// Create different types of flowers
+function createFlower(type = Math.floor(Math.random() * 3)) {
     const group = new THREE.Group();
     
-    // Stem
+    // Common stem
     const stemGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.5, 8);
     const stemMaterial = new THREE.MeshPhongMaterial({ color: 0x2d5a27 });
     const stem = new THREE.Mesh(stemGeometry, stemMaterial);
     stem.position.y = 0.25;
     group.add(stem);
 
-    // Petals
-    const petalGeometry = new THREE.ConeGeometry(0.1, 0.15, 8);
-    const petalMaterial = new THREE.MeshPhongMaterial({ 
-        color: new THREE.Color().setHSL(Math.random(), 0.8, 0.6),
-        shininess: 30
-    });
+    switch(type) {
+        case 0: // Daisy-like flower
+            const centerGeometry = new THREE.SphereGeometry(0.08, 8, 8);
+            const centerMaterial = new THREE.MeshPhongMaterial({ color: 0xffd700 });
+            const center = new THREE.Mesh(centerGeometry, centerMaterial);
+            center.position.y = 0.5;
+            group.add(center);
 
-    for (let i = 0; i < 6; i++) {
-        const petal = new THREE.Mesh(petalGeometry, petalMaterial);
-        petal.position.y = 0.5;
-        petal.rotation.z = (Math.PI / 3) * 0.5;
-        petal.rotation.y = (Math.PI / 3) * i;
-        group.add(petal);
-    }
+            const petalCount = 8;
+            const petalColor = new THREE.Color().setHSL(Math.random() * 0.1 + 0.1, 0.8, 0.9);
+            for (let i = 0; i < petalCount; i++) {
+                const petal = new THREE.Mesh(
+                    new THREE.PlaneGeometry(0.15, 0.08),
+                    new THREE.MeshPhongMaterial({ 
+                        color: petalColor,
+                        side: THREE.DoubleSide
+                    })
+                );
+                petal.position.y = 0.5;
+                petal.rotation.y = (Math.PI / petalCount) * i;
+                petal.rotation.x = Math.PI / 3; // Corrected petal angle
+                group.add(petal);
+            }
+            break;
 
-    return group;
-}
+        case 1: // Bell-like flower
+            const bellGeometry = new THREE.ConeGeometry(0.12, 0.2, 8, 1, true);
+            const bellMaterial = new THREE.MeshPhongMaterial({ 
+                color: new THREE.Color().setHSL(Math.random() * 0.2 + 0.7, 0.8, 0.6),
+                side: THREE.DoubleSide
+            });
+            const bell = new THREE.Mesh(bellGeometry, bellMaterial);
+            bell.position.y = 0.5;
+            bell.rotation.x = Math.PI; // Make bell face downward
+            group.add(bell);
+            break;
 
-// Create a low-poly tree
-function createTree() {
-    const group = new THREE.Group();
+        case 2: // Tulip-like flower
+            const petalMaterial = new THREE.MeshPhongMaterial({ 
+                color: new THREE.Color().setHSL(Math.random(), 0.8, 0.6),
+                shininess: 30
+            });
 
-    // Trunk
-    const trunkGeometry = new THREE.CylinderGeometry(0.2, 0.3, 2, 8);
-    const trunkMaterial = new THREE.MeshPhongMaterial({ 
-        color: 0x4a2f21,
-        flatShading: true 
-    });
-    const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
-    trunk.position.y = 1;
-    group.add(trunk);
-
-    // Leaves
-    const leavesGeometry = new THREE.IcosahedronGeometry(1, 0);
-    const leavesMaterial = new THREE.MeshStandardMaterial({ 
-        color: 0x5ab950,
-        flatShading: true,
-        roughness: 1,
-        metalness: 0
-    });
-
-    for (let i = 0; i < 3; i++) {
-        const leaves = new THREE.Mesh(leavesGeometry, leavesMaterial);
-        leaves.position.y = 2 + i * 0.5;
-        leaves.position.x = (Math.random() - 0.5) * 0.5;
-        leaves.position.z = (Math.random() - 0.5) * 0.5;
-        leaves.scale.set(0.7 - i * 0.15, 0.7 - i * 0.15, 0.7 - i * 0.15);
-        leaves.rotation.y = Math.random() * Math.PI;
-        group.add(leaves);
+            for (let i = 0; i < 6; i++) {
+                const petal = new THREE.Mesh(
+                    new THREE.ConeGeometry(0.1, 0.2, 8),
+                    petalMaterial
+                );
+                petal.position.y = 0.5;
+                petal.rotation.z = -Math.PI / 6; // Corrected petal angle
+                petal.rotation.y = (Math.PI / 3) * i;
+                group.add(petal);
+            }
+            break;
     }
 
     return group;
 }
 
 export function sceneInit(scene) {
-    // Create ground
-    const groundGeometry = new THREE.PlaneGeometry(50, 50, 32, 32);
+    // Create ground with terrain variation
+    const groundGeometry = new THREE.PlaneGeometry(50, 50, 64, 64);
+    const vertices = groundGeometry.attributes.position.array;
+    
+    // Add terrain variation
+    for (let i = 0; i < vertices.length; i += 3) {
+        const x = vertices[i];
+        const z = vertices[i + 2];
+        // Create smooth hills using multiple sine waves
+        vertices[i + 1] = Math.sin(x * 0.5) * Math.cos(z * 0.5) * 0.5 +
+                         Math.sin(x * 0.2) * Math.cos(z * 0.3) * 1;
+    }
+    groundGeometry.computeVertexNormals();
+    
     const groundMaterial = new THREE.MeshPhongMaterial({ 
         color: 0x5ab950,
         shininess: 0,
@@ -117,66 +234,80 @@ export function sceneInit(scene) {
     ground.rotation.x = -Math.PI / 2;
     scene.add(ground);
 
-    // Remove Sky object and just use background color
-    // The fog will help create depth
-    scene.background = new THREE.Color(0xadd8e6); // Light blue
+    scene.background = new THREE.Color(0xadd8e6);
     scene.fog = new THREE.FogExp2(0xadd8e6, 0.015);
 
-    // Base grass color
-    const baseColor = new THREE.Color(0x5ab950);
-
-    // Create instance buffer for grass
+    // Create grass instances with density based on distance
     const blade = createGrassBlade();
     const instancedGrass = new THREE.InstancedMesh(
         blade,
         new THREE.MeshStandardMaterial({ 
-            color: baseColor,
+            color: new THREE.Color(0x5ab950),
             side: THREE.DoubleSide,
             roughness: 1,
             metalness: 0
         }),
-        50000 // Maximum grass density
+        40000 // Reduced count for better performance
     );
 
-    // Set up grass instances
     const matrix = new THREE.Matrix4();
-    for (let i = 0; i < 50000; i++) {
+    let instanceCount = 0;
+    const center = new THREE.Vector3(0, 0, 0);
+    
+    // Create grass with varying density
+    for (let i = 0; i < 40000; i++) {
         const x = (Math.random() - 0.5) * 40;
         const z = (Math.random() - 0.5) * 40;
-        const y = 0;
-        const angle = Math.random() * Math.PI;
+        const distance = Math.sqrt(x * x + z * z);
         
-        matrix.makeRotationY(angle);
-        matrix.setPosition(x, y, z);
-        instancedGrass.setMatrixAt(i, matrix);
-        grassInstances.push({
-            position: new THREE.Vector3(x, y, z),
-            baseRotation: angle
-        });
+        // Reduce density as distance increases
+        if (Math.random() < (1 - distance / 40)) {
+            const angle = Math.random() * Math.PI;
+            const y = Math.sin(x * 0.5) * Math.cos(z * 0.5) * 0.5 +
+                     Math.sin(x * 0.2) * Math.cos(z * 0.3) * 1;
+            
+            matrix.makeRotationY(angle);
+            matrix.setPosition(x, y, z);
+            instancedGrass.setMatrixAt(instanceCount, matrix);
+            grassInstances.push({
+                position: new THREE.Vector3(x, y, z),
+                baseRotation: angle
+            });
+            instanceCount++;
+        }
     }
+    instancedGrass.count = instanceCount;
     instancedGrass.instanceMatrix.needsUpdate = true;
     scene.add(instancedGrass);
 
-    // Add trees
-    for (let i = 0; i < 15; i++) {
+    // Add trees with varied types
+    for (let i = 0; i < 25; i++) {
+        const x = (Math.random() - 0.5) * 30;
+        const z = (Math.random() - 0.5) * 30;
         const tree = createTree();
-        tree.position.x = (Math.random() - 0.5) * 30;
-        tree.position.z = (Math.random() - 0.5) * 30;
+        const y = Math.sin(x * 0.5) * Math.cos(z * 0.5) * 0.5 +
+                 Math.sin(x * 0.2) * Math.cos(z * 0.3) * 1;
+        
+        tree.position.set(x, y, z);
         tree.rotation.y = Math.random() * Math.PI * 2;
         scene.add(tree);
     }
 
-    // Add flowers
-    for (let i = 0; i < 100; i++) {
+    // Add flowers with varied types
+    for (let i = 0; i < 150; i++) {
+        const x = (Math.random() - 0.5) * 40;
+        const z = (Math.random() - 0.5) * 40;
+        const y = Math.sin(x * 0.5) * Math.cos(z * 0.5) * 0.5 +
+                 Math.sin(x * 0.2) * Math.cos(z * 0.3) * 1;
+        
         const flower = createFlower();
-        flower.position.x = (Math.random() - 0.5) * 40;
-        flower.position.z = (Math.random() - 0.5) * 40;
+        flower.position.set(x, y, z);
         flower.rotation.y = Math.random() * Math.PI * 2;
         flowers.push(flower);
         scene.add(flower);
     }
 
-    // Lighting
+    // Enhanced lighting
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
     scene.add(ambientLight);
 
@@ -185,7 +316,6 @@ export function sceneInit(scene) {
     sunLight.castShadow = true;
     scene.add(sunLight);
 
-    // Add point lights for evening ambiance
     const light1 = new THREE.PointLight(0xff7f00, 1, 10);
     light1.position.set(5, 0.5, 5);
     scene.add(light1);
@@ -194,33 +324,26 @@ export function sceneInit(scene) {
     light2.position.set(-5, 0.5, -5);
     scene.add(light2);
 
-    // Animation function    
     function animate() {
         time += 0.015;
 
-        // Smooth grass animation
         const matrix = new THREE.Matrix4();
         const quaternion = new THREE.Quaternion();
         const targetQuaternion = new THREE.Quaternion();
         
-        // Update all instances every frame for smoother motion
         for (let i = 0; i < grassInstances.length; i++) {
             const grass = grassInstances[i];
             
-            // Enhanced wave-based animation
             const windEffect = 
-                Math.sin(time * 0.8 + grass.position.x * 0.05) * 0.15 + // Primary wave
-                Math.sin(time + grass.position.z * 0.05) * 0.1; // Secondary wave
+                Math.sin(time * 0.8 + grass.position.x * 0.05) * 0.15 +
+                Math.sin(time + grass.position.z * 0.05) * 0.1;
             
-            // Create smooth rotation
             matrix.makeRotationY(grass.baseRotation);
             quaternion.setFromRotationMatrix(matrix);
             
-            // Add wind effect
             targetQuaternion.setFromEuler(new THREE.Euler(0, grass.baseRotation, windEffect));
-            quaternion.slerp(targetQuaternion, 0.3); // Smooth interpolation
+            quaternion.slerp(targetQuaternion, 0.3);
             
-            // Apply final transformation
             matrix.makeRotationFromQuaternion(quaternion);
             matrix.setPosition(grass.position.x, grass.position.y, grass.position.z);
             
@@ -228,14 +351,12 @@ export function sceneInit(scene) {
         }
         instancedGrass.instanceMatrix.needsUpdate = true;
 
-        // Animate flowers with more natural movement
+        // Enhanced flower animation
         flowers.forEach((flower, index) => {
-            // Increased rotation and movement
+            const windStrength = 0.15;
             flower.rotation.y = Math.sin(time * 0.5 + index) * 0.2;
-            // More pronounced swaying
-            flower.rotation.z = Math.sin(time + flower.position.x * 0.1) * 0.15;
-            // More forward/backward tilt
-            flower.rotation.x = Math.sin(time * 0.7 + flower.position.z * 0.1) * 0.1;
+            flower.rotation.z = Math.sin(time + flower.position.x * 0.1) * windStrength;
+            flower.rotation.x = Math.sin(time * 0.7 + flower.position.z * 0.1) * (windStrength * 0.7);
         });
 
         requestAnimationFrame(animate);
