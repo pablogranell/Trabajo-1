@@ -239,10 +239,6 @@ export function sceneInit(scene) {
     const skyTexture = textureLoader.load('modelos/sky.png', (texture) => {
         texture.mapping = THREE.EquirectangularReflectionMapping;
         texture.encoding = THREE.sRGBEncoding;
-        const aspectRatio = texture.image.width / texture.image.height;
-        if (aspectRatio !== 16/9) {
-            console.warn('Sky texture is not 16:9, adjusting mapping');
-        }
     });
     scene.background = skyTexture;
     // Update fog to match sky color
