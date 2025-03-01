@@ -212,26 +212,53 @@ function createFlower(type = Math.floor(Math.random() * 3)) {
 
 export function sceneInit(scene) {
     // Create ground with terrain variation
-    const groundGeometry = new THREE.PlaneGeometry(50, 50, 64, 64);
-    const vertices = groundGeometry.attributes.position.array;
+    const size = 50;
+    const segments = 64;
+    const halfSize = size / 2;
     
-    // Add terrain variation
-    for (let i = 0; i < vertices.length; i += 3) {
-        const x = vertices[i];
-        const z = vertices[i + 2];
-        // Create smooth hills using multiple sine waves
-        vertices[i + 1] = Math.sin(x * 0.5) * Math.cos(z * 0.5) * 0.5 +
-                         Math.sin(x * 0.2) * Math.cos(z * 0.3) * 1;
+    const vertices = [];
+    const indices = [];
+    const uvs = [];
+    
+    // Create vertices
+    for(let i = 0; i <= segments; i++) {
+        const y = (i * size) / segments - halfSize;
+        for(let j = 0; j <= segments; j++) {
+            const x = (j * size) / segments - halfSize;
+            const z = Math.sin(x * 0.5) * Math.cos(y * 0.5) * 0.5 +
+                     Math.sin(x * 0.2) * Math.cos(y * 0.3) * 1;
+            vertices.push(x, z, y);
+            uvs.push(j / segments, i / segments);
+        }
     }
+    
+    // Create indices
+    for(let i = 0; i < segments; i++) {
+        for(let j = 0; j < segments; j++) {
+            const a = i * (segments + 1) + j;
+            const b = a + 1;
+            const c = a + (segments + 1);
+            const d = c + 1;
+            indices.push(a, b, c);
+            indices.push(b, d, c);
+        }
+    }
+    
+    const groundGeometry = new THREE.BufferGeometry();
+    groundGeometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    groundGeometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+    groundGeometry.setIndex(indices);
     groundGeometry.computeVertexNormals();
     
-    const groundMaterial = new THREE.MeshPhongMaterial({ 
+    const groundMaterial = new THREE.MeshStandardMaterial({ 
         color: 0x5ab950,
-        shininess: 0,
-        flatShading: true
+        roughness: 0.8,
+        metalness: 0.2,
+        side: THREE.DoubleSide
     });
+    
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
     scene.add(ground);
 
     // Create skybox
