@@ -6,19 +6,19 @@ let time = 0;
 
 // Create a grass blade geometry
 function createGrassBlade() {
-    const height = 0.4 + Math.random() * 0.5;
-    const baseWidth = 0.08 + Math.random() * 0.04;
+    const height = 0.3 + Math.random() * 0.7;
+    const baseWidth = 0.06 + Math.random() * 0.06;
     const shape = new THREE.Shape();
     
-    const baseVariation = (Math.random() - 0.5) * 0.02;
+    const baseVariation = (Math.random() - 0.5) * 0.04;
     shape.moveTo(-baseWidth/2 + baseVariation, 0);
     shape.lineTo(baseWidth/2 + baseVariation, 0);
     
-    const cp1x = (Math.random() - 0.5) * 0.2;
-    const cp1y = height * 0.3;
-    const cp2x = (Math.random() - 0.5) * 0.2;
-    const cp2y = height * 0.6;
-    const tipVariation = (Math.random() - 0.5) * 0.1;
+    const cp1x = (Math.random() - 0.5) * 0.3;
+    const cp1y = height * (0.2 + Math.random() * 0.2);
+    const cp2x = (Math.random() - 0.5) * 0.3;
+    const cp2y = height * (0.5 + Math.random() * 0.2);
+    const tipVariation = (Math.random() - 0.5) * 0.15;
     
     shape.bezierCurveTo(
         baseWidth/2 + cp1x, cp1y,
@@ -254,32 +254,37 @@ export function sceneInit(scene) {
             roughness: 1,
             metalness: 0
         }),
-        100000 // Reduced count for better performance
+        100000
     );
 
     const matrix = new THREE.Matrix4();
     let instanceCount = 0;
-    const center = new THREE.Vector3(0, 0, 0);
     
-    // Create grass with varying density
+    // Crear césped con densidad basada en la distancia
     for (let i = 0; i < 100000; i++) {
         const x = (Math.random() - 0.5) * 40;
         const z = (Math.random() - 0.5) * 40;
         const distance = Math.sqrt(x * x + z * z);
         
-        // Reduce density as distance increases
         if (Math.random() < (1 - distance / 40)) {
             const angle = Math.random() * Math.PI;
             const y = Math.sin(x * 0.5) * Math.cos(z * 0.5) * 0.5 +
                      Math.sin(x * 0.2) * Math.cos(z * 0.3) * 1;
             
+            // Escala más uniforme
+            const scale = 0.9 + Math.random() * 0.2;
+            
             matrix.makeRotationY(angle);
+            matrix.scale(new THREE.Vector3(scale, scale, scale));
             matrix.setPosition(x, y, z);
+            
             instancedGrass.setMatrixAt(instanceCount, matrix);
             grassInstances.push({
                 position: new THREE.Vector3(x, y, z),
-                baseRotation: angle
+                baseRotation: angle,
+                scale: scale
             });
+            
             instanceCount++;
         }
     }
@@ -352,7 +357,7 @@ export function sceneInit(scene) {
 
         // Enhanced flower animation
         flowers.forEach((flower, index) => {
-            const windStrength = 0.15;
+            const windStrength = 0.05;
             flower.rotation.y = Math.sin(time * 0.5 + index) * 0.2;
             flower.rotation.z = Math.sin(time + flower.position.x * 0.1) * windStrength;
             flower.rotation.x = Math.sin(time * 0.7 + flower.position.z * 0.1) * (windStrength * 0.7);
