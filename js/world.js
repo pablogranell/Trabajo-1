@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 
 let grassInstances = [];
 let flowers = [];
@@ -210,7 +211,7 @@ function createFlower(type = Math.floor(Math.random() * 3)) {
     return group;
 }
 
-export function sceneInit(scene) {
+export function sceneInit(scene, loadingManager) {
     // Create ground with terrain variation
     const size = 50;
     const segments = 64;
@@ -261,15 +262,32 @@ export function sceneInit(scene) {
     ground.receiveShadow = true;
     scene.add(ground);
 
-    // Create skybox
-    const textureLoader = new THREE.TextureLoader();
-    const skyTexture = textureLoader.load('modelos/sky.png', (texture) => {
+    // Create skybox using loadingManager
+    const skyTexture = loadingManager.textureLoader.load('modelos/sky.png', (texture) => {
         texture.mapping = THREE.EquirectangularReflectionMapping;
-        texture.encoding = THREE.sRGBEncoding;
+        texture.encoding = THREE.LinearEncoding;
     });
     scene.background = skyTexture;
     // Update fog to match sky color
     scene.fog = new THREE.FogExp2(0x87ceeb, 0.015);
+
+    // Load stone bench model
+    const fbxLoader = new FBXLoader(loadingManager.getManager());
+    fbxLoader.load('modelos/3D/stone_bench_01_m13.fbx', (bench) => {
+        bench.scale.set(1, 1.5, 1);
+        // Position the bench
+        bench.position.set(-5, 0.3, 5); // Adjust these values to place the bench
+        
+        // Make the bench cast and receive shadows
+        bench.traverse((child) => {
+            if (child.isMesh) {
+                child.castShadow = true;
+                child.receiveShadow = true;
+            }
+        });
+        
+        scene.add(bench);
+    });
 
     // Create grass instances with density based on distance
     const blade = createGrassBlade();

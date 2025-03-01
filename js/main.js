@@ -10,7 +10,8 @@ class Scene {
         this.init();
         this.setupControls();
         this.setupEventListeners();
-        sceneInit(this.scene);
+        // Pass loadingManager as the second parameter
+        sceneInit(this.scene, this.loadingManager);
         this.animate();
     }
 
