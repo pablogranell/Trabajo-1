@@ -254,7 +254,7 @@ export function sceneInit(scene) {
             roughness: 1,
             metalness: 0
         }),
-        40000 // Reduced count for better performance
+        100000 // Reduced count for better performance
     );
 
     const matrix = new THREE.Matrix4();
@@ -262,7 +262,7 @@ export function sceneInit(scene) {
     const center = new THREE.Vector3(0, 0, 0);
     
     // Create grass with varying density
-    for (let i = 0; i < 40000; i++) {
+    for (let i = 0; i < 100000; i++) {
         const x = (Math.random() - 0.5) * 40;
         const z = (Math.random() - 0.5) * 40;
         const distance = Math.sqrt(x * x + z * z);
@@ -323,16 +323,8 @@ export function sceneInit(scene) {
     sunLight.castShadow = true;
     scene.add(sunLight);
 
-    const light1 = new THREE.PointLight(0xff7f00, 1, 10);
-    light1.position.set(5, 0.5, 5);
-    scene.add(light1);
-
-    const light2 = new THREE.PointLight(0xff7f00, 1, 10);
-    light2.position.set(-5, 0.5, -5);
-    scene.add(light2);
-
     function animate() {
-        time += 0.015;
+        time += 0.05;
 
         const matrix = new THREE.Matrix4();
         const quaternion = new THREE.Quaternion();
