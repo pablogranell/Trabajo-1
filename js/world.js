@@ -234,8 +234,19 @@ export function sceneInit(scene) {
     ground.rotation.x = -Math.PI / 2;
     scene.add(ground);
 
-    scene.background = new THREE.Color(0xadd8e6);
-    scene.fog = new THREE.FogExp2(0xadd8e6, 0.015);
+    // Create skybox
+    const textureLoader = new THREE.TextureLoader();
+    const skyTexture = textureLoader.load('modelos/sky.png', (texture) => {
+        texture.mapping = THREE.EquirectangularReflectionMapping;
+        texture.encoding = THREE.sRGBEncoding;
+        const aspectRatio = texture.image.width / texture.image.height;
+        if (aspectRatio !== 16/9) {
+            console.warn('Sky texture is not 16:9, adjusting mapping');
+        }
+    });
+    scene.background = skyTexture;
+    // Update fog to match sky color
+    scene.fog = new THREE.FogExp2(0x87ceeb, 0.015);
 
     // Create grass instances with density based on distance
     const blade = createGrassBlade();
