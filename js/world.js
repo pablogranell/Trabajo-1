@@ -5,7 +5,7 @@ const CONFIG = {
     WORLD: {
         SIZE: 50,
         TERRAIN_SEGMENTS: 64,
-        FOG_DENSITY: 0.01 + Math.random() * 0.04
+        FOG_DENSITY: 0.005 + Math.random() * 0.02
     },
     
     COUNTS: {
@@ -69,7 +69,7 @@ const CONFIG = {
     
     LIGHTING: {
         AMBIENT_LIGHT_INTENSITY: 0.4,
-        SUN_LIGHT_INTENSITY: 5,
+        SUN_LIGHT_INTENSITY: 10,
         SUN_LIGHT_COLOR: 0xfffaed,
         SKY_ANALYSIS: {
             ENABLED: true,

@@ -42,7 +42,7 @@ class Scene {
         this.isSitting = false;
         this.nearBench = false;
         this.bench = null;
-        this.standingHeight = 1.8; // Altura normal de pie
+        this.standingHeight = 1.6; // Altura normal de pie
         this.sittingHeight = 1.8; // Altura cuando está sentado
     }
 
