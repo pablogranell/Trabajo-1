@@ -286,6 +286,46 @@ export function sceneInit(scene, loadingManager) {
             }
         });
         
+        // Agregar referencia al banco en la escena global
+        window.mainScene.bench = bench;
+        
+        // Crear esfera invisible para interacción
+        const interactionRadius = 2; // Radio de interacción
+        const interactionGeometry = new THREE.SphereGeometry(interactionRadius);
+        const interactionMaterial = new THREE.MeshBasicMaterial({
+            color: 0xff0000,
+            transparent: true,
+            opacity: 0, // Invisible al jugador
+            depthWrite: false
+        });
+        const interactionSphere = new THREE.Mesh(interactionGeometry, interactionMaterial);
+        interactionSphere.position.copy(bench.position);
+        interactionSphere.position.y += 1; // Ajustar altura de la esfera
+        
+        // Agregar la esfera a la escena
+        scene.add(interactionSphere);
+        
+        // Crear texto flotante para indicar interacción
+        const benchIndicator = document.createElement('div');
+        benchIndicator.id = 'bench-indicator';
+        benchIndicator.textContent = 'Pulsa E para sentarte';
+        benchIndicator.style.position = 'fixed';
+        benchIndicator.style.top = '50%';
+        benchIndicator.style.left = '50%';
+        benchIndicator.style.transform = 'translate(-50%, -70px)';
+        benchIndicator.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        benchIndicator.style.color = 'white';
+        benchIndicator.style.padding = '5px 10px';
+        benchIndicator.style.borderRadius = '5px';
+        benchIndicator.style.fontFamily = 'Arial, sans-serif';
+        benchIndicator.style.display = 'none';
+        benchIndicator.style.zIndex = '1000';
+        document.body.appendChild(benchIndicator);
+        
+        // Referencia a la esfera y al indicador
+        window.mainScene.benchInteractionSphere = interactionSphere;
+        window.mainScene.benchIndicator = benchIndicator;
+        
         scene.add(bench);
     });
 

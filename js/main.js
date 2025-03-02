@@ -6,6 +6,9 @@ import { update } from './update.js';
 
 class Scene {
     constructor() {
+        // Asignar la instancia actual a window.mainScene para acceso global
+        window.mainScene = this;
+        
         this.loadingManager = new LoadingManager();
         this.init();
         this.setupControls();
@@ -34,6 +37,13 @@ class Scene {
         this.prevTime = performance.now();
         this.camera.position.y = 1.6; // Altura de la camara, mas o menos
         this.isPaused = false;
+        
+        // Variables para el banco
+        this.isSitting = false;
+        this.nearBench = false;
+        this.bench = null;
+        this.standingHeight = 1.8; // Altura normal de pie
+        this.sittingHeight = 1.8; // Altura cuando está sentado
     }
 
     setupControls() {
@@ -93,6 +103,8 @@ class Scene {
         });
         // Movimiento del jugador
         const onKeyDown = (event) => {
+            if (this.isPaused) return;
+            
             switch (event.code) {
                 case 'ArrowUp':
                 case 'KeyW':
@@ -109,6 +121,20 @@ class Scene {
                 case 'ArrowRight':
                 case 'KeyD':
                     this.moveRight = true;
+                    break;
+                case 'KeyE':
+                    // Interacción con el banco
+                    if (this.nearBench && !this.isSitting) {
+                        this.sitOnBench();
+                    } else if (this.isSitting) {
+                        this.standUp();
+                    }
+                    break;
+                case 'KeyZ':
+                    // Recargar página si está sentado
+                    if (this.isSitting) {
+                        location.reload();
+                    }
                     break;
             }
         };
@@ -136,6 +162,84 @@ class Scene {
 
         document.addEventListener('keydown', onKeyDown);
         document.addEventListener('keyup', onKeyUp);
+    }
+
+    // Método para sentarse en el banco
+    sitOnBench() {
+        if (!this.bench) return;
+        
+        this.isSitting = true;
+        
+        // Posicionar al jugador en el banco
+        const benchPosition = this.bench.position.clone();
+        
+        // Ajustar la posición para que el jugador quede correctamente sentado
+        benchPosition.y += this.sittingHeight;
+        
+        // Orientar la cámara para mirar al frente del banco
+        const currentRotation = this.camera.rotation.y;
+        
+        // Guardar la posición actual para cuando se levante
+        this.standingPosition = this.camera.position.clone();
+        
+        // Posicionar cámara en el banco
+        this.camera.position.copy(benchPosition);
+        
+        // Deshabilitar movimiento
+        this.moveForward = this.moveBackward = this.moveLeft = this.moveRight = false;
+        
+        // Mostrar mensaje de ayuda
+        this.showHelpMessage("Pulsa E para levantarte, Z para recargar el jardín");
+    }
+
+    // Método para levantarse del banco
+    standUp() {
+        this.isSitting = false;
+        
+        if (this.standingPosition) {
+            // Restaurar posición anterior, pero manteniendo la rotación actual
+            const currentRotation = this.camera.rotation.clone();
+            this.camera.position.copy(this.standingPosition);
+            this.camera.rotation.copy(currentRotation);
+        } else {
+            // Si no tenemos posición anterior, simplemente nos levantamos en el mismo sitio
+            this.camera.position.y = this.standingHeight;
+        }
+        
+        // Ocultar mensaje de ayuda
+        this.hideHelpMessage();
+    }
+
+    // Método para mostrar mensaje de ayuda
+    showHelpMessage(text) {
+        let helpMsg = document.getElementById('help-message');
+        
+        if (!helpMsg) {
+            helpMsg = document.createElement('div');
+            helpMsg.id = 'help-message';
+            helpMsg.style.position = 'fixed';
+            helpMsg.style.bottom = '20px';
+            helpMsg.style.left = '50%';
+            helpMsg.style.transform = 'translateX(-50%)';
+            helpMsg.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+            helpMsg.style.color = 'white';
+            helpMsg.style.padding = '10px 20px';
+            helpMsg.style.borderRadius = '5px';
+            helpMsg.style.fontFamily = 'Arial, sans-serif';
+            helpMsg.style.zIndex = '1000';
+            document.body.appendChild(helpMsg);
+        }
+        
+        helpMsg.textContent = text;
+        helpMsg.style.display = 'block';
+    }
+
+    // Método para ocultar mensaje de ayuda
+    hideHelpMessage() {
+        const helpMsg = document.getElementById('help-message');
+        if (helpMsg) {
+            helpMsg.style.display = 'none';
+        }
     }
 
     animate() {

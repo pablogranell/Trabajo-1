@@ -6,6 +6,16 @@ export function update(scene) {
     const time = performance.now();
     const delta = (time - scene.prevTime) / 1000;
 
+    // Verificar si el jugador está cerca del banco
+    checkBenchProximity(scene);
+
+    // Si el jugador está sentado, desactivar el movimiento y la gravedad
+    if (scene.isSitting) {
+        scene.velocity.set(0, 0, 0);
+        scene.prevTime = time;
+        return;
+    }
+
     scene.velocity.x -= scene.velocity.x * 10.0 * delta;
     scene.velocity.z -= scene.velocity.z * 10.0 * delta;
 
@@ -38,12 +48,41 @@ export function update(scene) {
     const newY = position.y + scene.velocity.y * delta;
     
     // Ground collision check
-    if (newY < groundHeight + 2) {
-        position.y = groundHeight + 2;
+    if (newY < groundHeight + scene.standingHeight) {
+        position.y = groundHeight + scene.standingHeight;
         scene.velocity.y = 0;
     } else {
         position.y = newY;
     }
 
     scene.prevTime = time;
+}
+
+// Función para verificar la proximidad al banco
+function checkBenchProximity(scene) {
+    if (!scene.bench || !scene.benchInteractionSphere) return;
+    
+    // Calcular la distancia entre el jugador y el centro de la esfera de interacción
+    const playerPosition = scene.camera.position.clone();
+    const benchPosition = scene.benchInteractionSphere.position.clone();
+    
+    // Comparar solo las coordenadas X y Z (ignorar altura Y)
+    playerPosition.y = 0;
+    benchPosition.y = 0;
+    
+    const distance = playerPosition.distanceTo(benchPosition);
+    const interactionRadius = scene.benchInteractionSphere.geometry.parameters.radius;
+    
+    // Verificar si el jugador está dentro del radio de interacción
+    const isNear = distance < interactionRadius;
+    
+    // Si el estado ha cambiado, actualizar variables y UI
+    if (isNear !== scene.nearBench) {
+        scene.nearBench = isNear;
+        
+        // Mostrar u ocultar el indicador de interacción
+        if (scene.benchIndicator) {
+            scene.benchIndicator.style.display = isNear && !scene.isSitting ? 'block' : 'none';
+        }
+    }
 }
