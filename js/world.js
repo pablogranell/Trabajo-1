@@ -1,6 +1,57 @@
 import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 
+// ============= CONFIGURATION PARAMETERS =============
+// World Configuration
+const WORLD_SIZE = 50;
+const TERRAIN_SEGMENTS = 64;
+const FOG_DENSITY = 0.015;
+
+// Element Counts
+const GRASS_INSTANCES_MAX = 100000;
+const TREE_COUNT = 25;
+const FLOWER_COUNT = 150;
+const BIRD_COUNT = 7;
+const BUTTERFLY_COUNT = 10;
+const CLOUD_COUNT = 60;
+const LIGHT_ORB_COUNT = 30;
+const MIST_PATCH_COUNT = 10;
+const POLLEN_PARTICLE_COUNT = 400;
+
+// Colors
+const GROUND_COLOR = 0x5ab950;
+const GRASS_COLOR = 0x5ab950;
+const TRUNK_COLOR = 0x4a2f21;
+const BIRCH_TRUNK_COLOR = 0xd3d3d3;
+
+// Distances & Positions
+const TREE_SPAWN_RADIUS = 30;
+const BENCH_POSITION = new THREE.Vector3(-5, 0.3, 5);
+const BENCH_INTERACTION_RADIUS = 2;
+const MIN_TREE_DISTANCE_FROM_BENCH = 2;
+const FLOWER_SPAWN_RADIUS = 40;
+const CLOUD_SPAWN_RADIUS = 120;
+const CLOUD_HEIGHT_MIN = 15;
+const CLOUD_HEIGHT_MAX = 55;
+
+// Physics & Animation
+const WIND_STRENGTH = 0.05;
+const BASE_WING_FLAP_SPEED = 10;
+const SKYBOX_ROTATION_SPEED = 0.0005;
+const CLOUD_MOVEMENT_SPEED_MIN = 0.002;
+const CLOUD_MOVEMENT_SPEED_MAX = 0.01;
+const BIRD_SPEED_MIN = 0.02;
+const BIRD_SPEED_MAX = 0.05;
+const BUTTERFLY_SPEED_MIN = 0.02;
+const BUTTERFLY_SPEED_MAX = 0.05;
+
+// Lighting
+const AMBIENT_LIGHT_INTENSITY = 0.65;
+const SUN_LIGHT_INTENSITY = 1.2;
+const SUN_LIGHT_COLOR = 0xfffaed;
+
+// ============= END CONFIGURATION =============
+
 let grassInstances = [];
 let flowers = [];
 let trees = [];
@@ -42,7 +93,7 @@ function createGrassBlade() {
 function createTree(type = Math.floor(Math.random() * 3)) {
     const group = new THREE.Group();
     let trunkMaterial = new THREE.MeshPhongMaterial({ 
-        color: 0x4a2f21,
+        color: TRUNK_COLOR,
         flatShading: true 
     });
 
@@ -171,7 +222,7 @@ function createTree(type = Math.floor(Math.random() * 3)) {
             const birchTrunk = new THREE.Mesh(
                 new THREE.CylinderGeometry(0.15, 0.2, 3, 8),
                 new THREE.MeshPhongMaterial({ 
-                    color: 0xd3d3d3,
+                    color: BIRCH_TRUNK_COLOR,
                     flatShading: true 
                 })
             );
@@ -297,8 +348,8 @@ function createFlower(type = Math.floor(Math.random() * 3)) {
 
 export function sceneInit(scene, loadingManager) {
     // Create ground with terrain variation
-    const size = 50;
-    const segments = 64;
+    const size = WORLD_SIZE;
+    const segments = TERRAIN_SEGMENTS;
     const halfSize = size / 2;
     
     const vertices = [];
@@ -336,7 +387,7 @@ export function sceneInit(scene, loadingManager) {
     groundGeometry.computeVertexNormals();
     
     const groundMaterial = new THREE.MeshStandardMaterial({ 
-        color: 0x5ab950,
+        color: GROUND_COLOR,
         roughness: 0.8,
         metalness: 0.2,
         side: THREE.DoubleSide
@@ -360,14 +411,14 @@ export function sceneInit(scene, loadingManager) {
 
     // Establecer el cielo directamente como fondo
     scene.background = skyTexture;
-    scene.fog = new THREE.FogExp2(0x87ceeb, 0.015);
+    scene.fog = new THREE.FogExp2(0x87ceeb, FOG_DENSITY);
 
     // Load stone bench model
     const fbxLoader = new FBXLoader(loadingManager.getManager());
     fbxLoader.load('modelos/3D/stone_bench_01_m13.fbx', (bench) => {
         bench.scale.set(1, 1.5, 1);
         // Position the bench
-        bench.position.set(-5, 0.3, 5); // Adjust these values to place the bench
+        bench.position.copy(BENCH_POSITION);
         
         // Make the bench cast and receive shadows
         bench.traverse((child) => {
@@ -381,7 +432,7 @@ export function sceneInit(scene, loadingManager) {
         window.mainScene.bench = bench;
         
         // Crear esfera invisible para interacción
-        const interactionRadius = 2; // Radio de interacción
+        const interactionRadius = BENCH_INTERACTION_RADIUS; // Radio de interacción
         const interactionGeometry = new THREE.SphereGeometry(interactionRadius);
         const interactionMaterial = new THREE.MeshBasicMaterial({
             color: 0xff0000,
@@ -425,19 +476,19 @@ export function sceneInit(scene, loadingManager) {
     const instancedGrass = new THREE.InstancedMesh(
         blade,
         new THREE.MeshStandardMaterial({ 
-            color: new THREE.Color(0x5ab950),
+            color: new THREE.Color(GRASS_COLOR),
             side: THREE.DoubleSide,
             roughness: 1,
             metalness: 0
         }),
-        100000
+        GRASS_INSTANCES_MAX
     );
 
     const matrix = new THREE.Matrix4();
     let instanceCount = 0;
     
     // Crear césped con densidad basada en la distancia
-    for (let i = 0; i < 100000; i++) {
+    for (let i = 0; i < GRASS_INSTANCES_MAX; i++) {
         const x = (Math.random() - 0.5) * 40;
         const z = (Math.random() - 0.5) * 40;
         const distance = Math.sqrt(x * x + z * z);
@@ -469,18 +520,16 @@ export function sceneInit(scene, loadingManager) {
     scene.add(instancedGrass);
 
     // Add trees with varied types
-    for (let i = 0; i < 25; i++) {
-        const x = (Math.random() - 0.5) * 30;
-        const z = (Math.random() - 0.5) * 30;
+    for (let i = 0; i < TREE_COUNT; i++) {
+        const x = (Math.random() - 0.5) * TREE_SPAWN_RADIUS;
+        const z = (Math.random() - 0.5) * TREE_SPAWN_RADIUS;
         
         // Verificar distancia al banco (posición del banco: -5, 0.3, 5)
-        const benchPosition = new THREE.Vector3(-5, 0, 5);
         const treePosition = new THREE.Vector3(x, 0, z);
-        const distanceToBench = treePosition.distanceTo(benchPosition);
+        const distanceToBench = treePosition.distanceTo(BENCH_POSITION);
         
         // Si está muy cerca del banco, continuar a la siguiente iteración
-        const minDistanceFromBench = 2; // Distancia mínima en unidades 3D
-        if (distanceToBench < minDistanceFromBench) {
+        if (distanceToBench < MIN_TREE_DISTANCE_FROM_BENCH) {
             i--; // Repetir esta iteración
             continue;
         }
@@ -501,9 +550,9 @@ export function sceneInit(scene, loadingManager) {
     }
 
     // Add flowers with varied types
-    for (let i = 0; i < 150; i++) {
-        const x = (Math.random() - 0.5) * 40;
-        const z = (Math.random() - 0.5) * 40;
+    for (let i = 0; i < FLOWER_COUNT; i++) {
+        const x = (Math.random() - 0.5) * FLOWER_SPAWN_RADIUS;
+        const z = (Math.random() - 0.5) * FLOWER_SPAWN_RADIUS;
         const y = Math.sin(x * 0.5) * Math.cos(z * 0.5) * 0.5 +
                  Math.sin(x * 0.2) * Math.cos(z * 0.3) * 1;
         
@@ -515,10 +564,10 @@ export function sceneInit(scene, loadingManager) {
     }
 
     // Enhanced lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
+    const ambientLight = new THREE.AmbientLight(0xffffff, AMBIENT_LIGHT_INTENSITY);
     scene.add(ambientLight);
 
-    const sunLight = new THREE.DirectionalLight(0xfffaed, 1.2);
+    const sunLight = new THREE.DirectionalLight(SUN_LIGHT_COLOR, SUN_LIGHT_INTENSITY);
     sunLight.position.set(5, 10, 5);
     sunLight.castShadow = true;
     
@@ -577,7 +626,7 @@ export function sceneInit(scene, loadingManager) {
         
         // Datos para animación
         bird.userData = {
-            speed: 0.02 + Math.random() * 0.03,
+            speed: BIRD_SPEED_MIN + Math.random() * (BIRD_SPEED_MAX - BIRD_SPEED_MIN),
             angle: Math.random() * Math.PI * 2,
             height: 5 + Math.random() * 3,
             radius: 10 + Math.random() * 10,
@@ -593,7 +642,7 @@ export function sceneInit(scene, loadingManager) {
 
     // Añadir pájaros a la escena
     const birds = [];
-    for (let i = 0; i < 7; i++) { // Aumentado a 7 pájaros
+    for (let i = 0; i < BIRD_COUNT; i++) {
         const bird = createBird();
         scene.add(bird);
         birds.push(bird);
@@ -654,7 +703,7 @@ export function sceneInit(scene, loadingManager) {
         
         // Datos para animación
         cloud.userData = {
-            speed: 0.002 + Math.random() * 0.008,
+            speed: CLOUD_MOVEMENT_SPEED_MIN + Math.random() * (CLOUD_MOVEMENT_SPEED_MAX - CLOUD_MOVEMENT_SPEED_MIN),
             direction: new THREE.Vector3(
                 (Math.random() - 0.5) * 0.15,
                 0,
@@ -672,11 +721,11 @@ export function sceneInit(scene, loadingManager) {
     
     // Añadir nubes a la escena - Aumentamos significativamente el número
     const clouds = [];
-    for (let i = 0; i < 60; i++) { // Aumentado de 40 a 60 nubes
+    for (let i = 0; i < CLOUD_COUNT; i++) {
         const cloud = createCloud();
         
         // Mayor distribución espacial
-        const radius = 10 + Math.random() * 120; // Ampliado de 70 a 120 para mayor dispersión
+        const radius = Math.random() * CLOUD_SPAWN_RADIUS;
         const angle = Math.random() * Math.PI * 2;
         const x = Math.cos(angle) * radius;
         const z = Math.sin(angle) * radius;
