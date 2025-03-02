@@ -625,6 +625,7 @@ export function sceneInit(scene, loadingManager) {
         scene.add(bird);
         birds.push(bird);
     }
+    STATE.birds = birds;
 
     function createCloud() {
         const cloud = new THREE.Group();
@@ -709,6 +710,7 @@ export function sceneInit(scene, loadingManager) {
         scene.add(cloud);
         clouds.push(cloud);
     }
+    STATE.clouds = clouds;
     
     function createButterfly() {
         const butterfly = new THREE.Group();
@@ -900,8 +902,8 @@ export function sceneInit(scene, loadingManager) {
             waitTime: 0,
             maxWaitTime: Math.random() * 200,
             isWaiting: false,
-            bobAmount: 0.005 + Math.random() * 0.01, // Cantidad de balanceo vertical
-            bobSpeed: 0.1 + Math.random() * 0.2     // Velocidad de balanceo
+            bobAmount: 0.005 + Math.random() * 0.01,
+            bobSpeed: 0.1 + Math.random() * 0.2
         };
         
         return butterfly;
@@ -938,6 +940,7 @@ export function sceneInit(scene, loadingManager) {
             butterflies.push(butterfly);
         }
     }
+    STATE.butterflies = butterflies;
     
     function createPollenParticles() {
         const particlesGeometry = new THREE.BufferGeometry();
