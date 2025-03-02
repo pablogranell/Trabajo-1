@@ -199,42 +199,51 @@ function createTree(type = Math.floor(Math.random() * 3)) {
             break;
 
         case 2:
+            const birchTrunkHeight = 3.5 + Math.random() * 0.5;
             const birchTrunk = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.15, 0.2, 3, 8),
-                new THREE.MeshPhongMaterial({ 
+                new THREE.CylinderGeometry(0.15, 0.25, birchTrunkHeight, 8),
+                new THREE.MeshStandardMaterial({ 
                     color: CONFIG.COLORS.BIRCH_TRUNK_COLOR,
-                    flatShading: true 
+                    roughness: 0.7,
+                    metalness: 0.1
                 })
             );
-            birchTrunk.position.y = 1.5;
+            birchTrunk.position.y = birchTrunkHeight / 2;
+            birchTrunk.castShadow = true;
+            birchTrunk.receiveShadow = true;
             group.add(birchTrunk);
 
-            const leafGeometry = new THREE.IcosahedronGeometry(0.8, 0);
+            const leafGeometry = new THREE.SphereGeometry(0.8, 8, 6);
             
-            for(let i = 0; i < 5; i++) {
+            for(let i = 0; i < 7; i++) {
                 const leafColor = new THREE.Color(0x98fb98).lerp(
-                    new THREE.Color(0xaaffaa), 
-                    Math.random() * 0.5
+                    new THREE.Color(0x7ccd7c), 
+                    Math.random() * 0.6
                 );
                 
                 const leafMaterial = new THREE.MeshStandardMaterial({
                     color: leafColor,
                     flatShading: true,
-                    roughness: 1
+                    roughness: 0.9,
+                    metalness: 0.1
                 });
                 
                 const leaves = new THREE.Mesh(leafGeometry, leafMaterial);
                 leaves.position.set(
-                    (Math.random() - 0.5) * 1.5,
-                    2.5 + (Math.random() - 0.5) * 0.8,
-                    (Math.random() - 0.5) * 1.5
+                    (Math.random() - 0.5) * 1.8,
+                    birchTrunkHeight - 0.5 + (Math.random() - 0.5) * 1.2,
+                    (Math.random() - 0.5) * 1.8
                 );
-                leaves.scale.set(0.6, 0.8, 0.6);
+                
+                const scale = 0.6 + Math.random() * 0.4;
+                leaves.scale.set(scale, scale * 0.9, scale);
                 leaves.rotation.set(
                     Math.random() * Math.PI,
                     Math.random() * Math.PI,
                     Math.random() * Math.PI
                 );
+                
+                leaves.castShadow = true;
                 
                 foliages.push(leaves);
                 group.add(leaves);
