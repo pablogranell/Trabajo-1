@@ -327,7 +327,7 @@ function createFlower(type = Math.floor(Math.random() * 3)) {
                 side: THREE.DoubleSide
             });
             const bell = new THREE.Mesh(bellGeometry, bellMaterial);
-            bell.position.y = 0.5;
+            bell.position.y = 0.56;
             bell.rotation.x = Math.PI;
             group.add(bell);
             break;
