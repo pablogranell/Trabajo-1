@@ -381,6 +381,19 @@ export function sceneInit(scene, loadingManager) {
     for (let i = 0; i < 25; i++) {
         const x = (Math.random() - 0.5) * 30;
         const z = (Math.random() - 0.5) * 30;
+        
+        // Verificar distancia al banco (posición del banco: -5, 0.3, 5)
+        const benchPosition = new THREE.Vector3(-5, 0, 5);
+        const treePosition = new THREE.Vector3(x, 0, z);
+        const distanceToBench = treePosition.distanceTo(benchPosition);
+        
+        // Si está muy cerca del banco, continuar a la siguiente iteración
+        const minDistanceFromBench = 2; // Distancia mínima en unidades 3D
+        if (distanceToBench < minDistanceFromBench) {
+            i--; // Repetir esta iteración
+            continue;
+        }
+        
         const tree = createTree();
         const y = Math.sin(x * 0.5) * Math.cos(z * 0.5) * 0.5 +
                  Math.sin(x * 0.2) * Math.cos(z * 0.3) * 1;
