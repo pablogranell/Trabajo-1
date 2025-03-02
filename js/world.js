@@ -5,7 +5,7 @@ const CONFIG = {
     WORLD: {
         SIZE: 50,
         TERRAIN_SEGMENTS: 64,
-        FOG_DENSITY: 0.01 + Math.random() * 0.09
+        FOG_DENSITY: 0.01 + Math.random() * 0.04
     },
     
     COUNTS: {
@@ -112,7 +112,7 @@ function analyzeSkyTexture(texture, options = {}) {
     
     const opts = {...defaults, ...options};
     const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
     
     canvas.width = texture.image.width;
     canvas.height = texture.image.height;
@@ -219,6 +219,104 @@ function updateLightingFromSky(scene, sunLight, ambientLight, skyAnalysis) {
     if (scene.fog) {
         scene.fog.color.copy(skyAnalysis.skyColor);
     }
+    
+    // Actualizar colores del terreno y césped basados en el color del cielo
+    updateEnvironmentColors(scene, skyAnalysis);
+}
+
+// Nueva función para actualizar los colores del ambiente
+function updateEnvironmentColors(scene, skyAnalysis) {
+    if (!skyAnalysis) return;
+    
+    // Obtener el color del cielo y ajustarlo para el terreno
+    const skyColor = skyAnalysis.skyColor;
+    
+    // Crear un color para el terreno basado en el color del cielo
+    const groundColor = new THREE.Color();
+    groundColor.copy(skyColor);
+    
+    // Ajustar el color del terreno para que sea más natural
+    // Aumentar el componente verde y reducir el azul para terreno
+    groundColor.r = Math.max(0.2, Math.min(0.8, groundColor.r * 0.8));
+    groundColor.g = Math.max(0.3, Math.min(0.9, groundColor.g * 1.2));
+    groundColor.b = Math.max(0.1, Math.min(0.7, groundColor.b * 0.6));
+    
+    // Crear un color para el césped basado en el color del cielo
+    const grassColor = new THREE.Color();
+    grassColor.copy(skyColor);
+    
+    // Ajustar el color del césped para que sea más verde
+    grassColor.r = Math.max(0.1, Math.min(0.6, grassColor.r * 0.5));
+    grassColor.g = Math.max(0.4, Math.min(1.0, grassColor.g * 1.5));
+    grassColor.b = Math.max(0.1, Math.min(0.5, grassColor.b * 0.4));
+    
+    // Crear un color para las flores basado en el color del cielo
+    const flowerColor = new THREE.Color();
+    flowerColor.copy(skyColor);
+    
+    // Hacer que las flores tengan colores más vibrantes
+    flowerColor.r = Math.max(0.5, Math.min(1.0, flowerColor.r * 1.5));
+    flowerColor.g = Math.max(0.3, Math.min(0.9, flowerColor.g * 0.9));
+    flowerColor.b = Math.max(0.4, Math.min(1.0, flowerColor.b * 1.2));
+    
+    // Crear un color para las hojas de los árboles basado en el color del cielo
+    const leafColor = new THREE.Color();
+    leafColor.copy(skyColor);
+    
+    // Ajustar el color de las hojas para que sea más verde
+    leafColor.r = Math.max(0.1, Math.min(0.5, leafColor.r * 0.4));
+    leafColor.g = Math.max(0.3, Math.min(0.9, leafColor.g * 1.3));
+    leafColor.b = Math.max(0.1, Math.min(0.4, leafColor.b * 0.3));
+    
+    // Actualizar los colores en la configuración
+    CONFIG.COLORS.GROUND_COLOR = groundColor.getHex();
+    CONFIG.COLORS.GRASS_COLOR = grassColor.getHex();
+    console.log("ddeddd")
+    // Actualizar materiales existentes en la escena
+    scene.traverse((object) => {
+        if (object.isMesh) {
+            // Actualizar el material del terreno
+            if (object.name === 'ground' && object.material) {
+                object.material.color.copy(groundColor);
+                object.material.needsUpdate = true;
+            }
+            
+            // Actualizar el material del césped (instanced mesh)
+            if (object.isInstancedMesh && object.userData.type === 'grass') {
+                object.material.color.copy(grassColor);
+                object.material.needsUpdate = true;
+            }
+            
+            // Actualizar colores de las flores
+            if (object.userData.type === 'flower') {
+                // Variar ligeramente el color para cada flor
+                const hue = (flowerColor.getHSL({}).h + Math.random() * 0.2 - 0.1) % 1;
+                const saturation = Math.min(1, flowerColor.getHSL({}).s * (0.8 + Math.random() * 0.4));
+                const lightness = Math.min(0.8, flowerColor.getHSL({}).l * (0.8 + Math.random() * 0.4));
+                
+                object.material.color.setHSL(hue, saturation, lightness);
+                object.material.needsUpdate = true;
+            }
+            
+            // Actualizar colores de las hojas de los árboles
+            if (object.userData.type === 'leaf') {
+                object.material.color.copy(leafColor);
+                object.material.needsUpdate = true;
+            }
+            
+            // Actualizar la niebla del suelo para que coincida con el ambiente
+            if (object.userData.type === 'groundMist') {
+                const mistColor = new THREE.Color();
+                mistColor.copy(skyColor);
+                mistColor.r = Math.min(1, mistColor.r * 1.2);
+                mistColor.g = Math.min(1, mistColor.g * 1.2);
+                mistColor.b = Math.min(1, mistColor.b * 1.2);
+                
+                object.material.color.copy(mistColor);
+                object.material.needsUpdate = true;
+            }
+        }
+    });
 }
 
 function createGrassBlade() {
@@ -254,6 +352,7 @@ function createGrassBlade() {
 
 function createTree(type = Math.floor(Math.random() * 3)) {
     const group = new THREE.Group();
+    group.userData.type = 'treeGroup';
     let trunkMaterial = new THREE.MeshPhongMaterial({ 
         color: CONFIG.COLORS.TRUNK_COLOR,
         flatShading: true 
@@ -271,6 +370,7 @@ function createTree(type = Math.floor(Math.random() * 3)) {
                 trunkMaterial
             );
             trunk.position.y = pineHeight/2;
+            trunk.userData.type = 'trunk';
             group.add(trunk);
 
             const levels = 4 + Math.floor(Math.random() * 3);
@@ -295,6 +395,7 @@ function createTree(type = Math.floor(Math.random() * 3)) {
                     })
                 );
                 cone.position.y = baseHeight - (i * coneSpacing);
+                cone.userData.type = 'leaf';
                 group.add(cone);
                 
                 pineCones.push(cone);
@@ -308,6 +409,7 @@ function createTree(type = Math.floor(Math.random() * 3)) {
                 trunkMaterial
             );
             oakTrunk.position.y = trunkHeight / 2;
+            oakTrunk.userData.type = 'trunk';
             group.add(oakTrunk);
 
             const foliageGeometry = new THREE.SphereGeometry(1.2, 8, 6);
@@ -340,6 +442,7 @@ function createTree(type = Math.floor(Math.random() * 3)) {
                     0.7 + Math.random() * 0.3
                 );
                 
+                foliage.userData.type = 'leaf';
                 foliages.push(foliage);
                 
                 group.add(foliage);
@@ -359,6 +462,7 @@ function createTree(type = Math.floor(Math.random() * 3)) {
             birchTrunk.position.y = birchTrunkHeight / 2;
             birchTrunk.castShadow = true;
             birchTrunk.receiveShadow = true;
+            birchTrunk.userData.type = 'trunk';
             group.add(birchTrunk);
 
             const leafGeometry = new THREE.SphereGeometry(0.8, 8, 6);
@@ -392,6 +496,7 @@ function createTree(type = Math.floor(Math.random() * 3)) {
                 );
                 
                 leaves.castShadow = true;
+                leaves.userData.type = 'leaf';
                 
                 foliages.push(leaves);
                 group.add(leaves);
@@ -413,11 +518,13 @@ function createTree(type = Math.floor(Math.random() * 3)) {
 
 function createFlower(type = Math.floor(Math.random() * 3)) {
     const group = new THREE.Group();
+    group.userData.type = 'flowerGroup';
     
     const stemGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.5, 8);
     const stemMaterial = new THREE.MeshPhongMaterial({ color: 0x2d5a27 });
     const stem = new THREE.Mesh(stemGeometry, stemMaterial);
     stem.position.y = 0.25;
+    stem.userData.type = 'stem';
     group.add(stem);
 
     switch(type) {
@@ -426,6 +533,7 @@ function createFlower(type = Math.floor(Math.random() * 3)) {
             const centerMaterial = new THREE.MeshPhongMaterial({ color: 0xffd700 });
             const center = new THREE.Mesh(centerGeometry, centerMaterial);
             center.position.y = 0.5;
+            center.userData.type = 'flower';
             group.add(center);
 
             const petalCount = 12;
@@ -449,6 +557,7 @@ function createFlower(type = Math.floor(Math.random() * 3)) {
                 const scale = 0.8 + Math.random() * 0.4;
                 petal.scale.set(scale, scale, scale);
                 
+                petal.userData.type = 'flower';
                 group.add(petal);
             }
             
@@ -464,6 +573,7 @@ function createFlower(type = Math.floor(Math.random() * 3)) {
                 leaf.position.x = 0.05;
                 leaf.rotation.x = Math.PI / 2;
                 leaf.rotation.y = Math.PI / 4;
+                leaf.userData.type = 'leaf';
                 group.add(leaf);
             }
             break;
@@ -477,6 +587,7 @@ function createFlower(type = Math.floor(Math.random() * 3)) {
             const bell = new THREE.Mesh(bellGeometry, bellMaterial);
             bell.position.y = 0.56;
             bell.rotation.x = Math.PI;
+            bell.userData.type = 'flower';
             group.add(bell);
             break;
 
@@ -494,6 +605,7 @@ function createFlower(type = Math.floor(Math.random() * 3)) {
                 petal.position.y = 0.5;
                 petal.rotation.z = -Math.PI / 6;
                 petal.rotation.y = (Math.PI / 3) * i;
+                petal.userData.type = 'flower';
                 group.add(petal);
             }
             break;
@@ -548,6 +660,8 @@ export function sceneInit(scene, loadingManager) {
     
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
     ground.receiveShadow = true;
+    ground.name = 'ground';
+    ground.userData.type = 'ground';
     scene.add(ground);
 
     // Seleccionar aleatoriamente uno de los skyboxes disponibles
@@ -557,12 +671,6 @@ export function sceneInit(scene, loadingManager) {
 
     const skyTexture = loadingManager.textureLoader.load(skyboxPath, (texture) => {
         texture.mapping = THREE.EquirectangularReflectionMapping;
-        texture.encoding = THREE.LinearEncoding;
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.ClampToEdgeWrapping;
-        texture.repeat.set(1, 1);
-        texture.offset.set(0, 0);
-        texture.needsUpdate = true;
         
         if (CONFIG.LIGHTING.SKY_ANALYSIS.ENABLED && texture.image) {
             const skyAnalysis = analyzeSkyTexture(texture);
@@ -577,6 +685,9 @@ export function sceneInit(scene, loadingManager) {
                         window.mainScene.ambientLight,
                         skyAnalysis
                     );
+                } else {
+                    // Si aún no tenemos las luces configuradas, al menos actualizamos los colores del ambiente
+                    updateEnvironmentColors(scene, skyAnalysis);
                 }
             }
         }
@@ -649,6 +760,9 @@ export function sceneInit(scene, loadingManager) {
         CONFIG.COUNTS.GRASS_INSTANCES_MAX
     );
 
+    instancedGrass.name = 'grass';
+    instancedGrass.userData.type = 'grass';
+    
     const matrix = new THREE.Matrix4();
     let instanceCount = 0;
     
@@ -1203,76 +1317,6 @@ export function sceneInit(scene, loadingManager) {
     const pollenSystem = createPollenParticles();
     scene.add(pollenSystem);
 
-    
-    function createGroundMist() {
-        const mistGroup = new THREE.Group();
-        const mistPatchCount = 10;
-        
-        for (let i = 0; i < mistPatchCount; i++) {
-            const mistPatch = new THREE.Group();
-            const particleCount = 3 + Math.floor(Math.random() * 5);
-            
-            const baseX = (Math.random() - 0.5) * 80;
-            const baseZ = (Math.random() - 0.5) * 80;
-            const baseY = Math.sin(baseX * 0.5) * Math.cos(baseZ * 0.5) * 0.5 +
-                          Math.sin(baseX * 0.2) * Math.cos(baseZ * 0.3) * 1;
-            
-            const mistColor = new THREE.Color(0x5ab950).lerp(
-                new THREE.Color(0xd8eeff), 
-                0.9 + Math.random() * 0.1
-            );
-            
-            for (let j = 0; j < particleCount; j++) {
-                const individualMaterial = new THREE.MeshStandardMaterial({
-                    color: mistColor,
-                    transparent: true,
-                    opacity: 0.03 + Math.random() * 0.02,
-                    roughness: 1,
-                    metalness: 0,
-                    side: THREE.DoubleSide,
-                    depthWrite: false,
-                    blending: THREE.AdditiveBlending
-                });
-                
-                const radius = 1.5 + Math.random() * 2.5;
-                const mistParticle = new THREE.Mesh(
-                    new THREE.SphereGeometry(radius, 
-                    Math.max(5, Math.floor(radius * 1.5)),
-                    Math.max(3, Math.floor(radius * 0.75))),
-                    individualMaterial
-                );
-                
-                const angle = (j / particleCount) * Math.PI * 2 + Math.random() * 0.7;
-                const distance = 5 + Math.random() * 12;
-                
-                mistParticle.position.set(
-                    baseX + Math.cos(angle) * distance,
-                    baseY + 0.01 + Math.random() * 0.06,
-                    baseZ + Math.sin(angle) * distance
-                );
-                
-                mistParticle.scale.y = 0.02 + Math.random() * 0.03;
-                
-                mistParticle.userData = {
-                    originalY: mistParticle.position.y,
-                    floatSpeed: 0.001 + Math.random() * 0.003,
-                    floatHeight: 0.01 + Math.random() * 0.02,
-                    phase: Math.random() * Math.PI * 2,
-                    originalOpacity: mistParticle.material.opacity,
-                    opacitySpeed: 0.0002 + Math.random() * 0.0003
-                };
-                
-                mistPatch.add(mistParticle);
-            }
-            
-            mistGroup.add(mistPatch);
-        }
-        
-        return mistGroup;
-    }
-    
-    const groundMist = createGroundMist();
-    scene.add(groundMist);
 
     const AnimationController = {
         animate: function() {
@@ -1285,7 +1329,6 @@ export function sceneInit(scene, loadingManager) {
             this.animateClouds();
             this.animateButterflies();
             this.animatePollenParticles();
-            this.animateMist();
             
             requestAnimationFrame(() => this.animate());
         },
@@ -1544,30 +1587,6 @@ export function sceneInit(scene, loadingManager) {
             
             pollenSystem.geometry.attributes.position.needsUpdate = true;
             pollenSystem.geometry.attributes.size.needsUpdate = true;
-        },
-        
-        animateMist: function() {
-            groundMist.children.forEach(mistPatch => {
-                mistPatch.children.forEach(mistParticle => {
-                    const userData = mistParticle.userData;
-                    
-                    mistParticle.position.y = userData.originalY + 
-                        Math.sin(STATE.time * userData.floatSpeed + userData.phase) * userData.floatHeight;
-                    
-                    const opacityFactor = 0.85 + Math.sin(STATE.time * userData.opacitySpeed + userData.phase) * 0.15;
-                    mistParticle.material.opacity = Math.min(0.1, userData.originalOpacity * opacityFactor);
-                    
-                    mistParticle.position.x += Math.sin(STATE.time * 0.005 + userData.phase) * 0.001;
-                    mistParticle.position.z += Math.cos(STATE.time * 0.005 + userData.phase + Math.PI/4) * 0.001;
-                    
-                    const newX = mistParticle.position.x;
-                    const newZ = mistParticle.position.z;
-                    
-                    const terrainY = calculateTerrainHeight(newX, newZ);
-                    
-                    userData.originalY += (terrainY + 0.02 - userData.originalY) * 0.001;
-                });
-            });
         }
     };
 
