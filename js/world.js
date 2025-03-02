@@ -5,7 +5,7 @@ const CONFIG = {
     WORLD: {
         SIZE: 50,
         TERRAIN_SEGMENTS: 64,
-        FOG_DENSITY: 0.05
+        FOG_DENSITY: 0.01 + Math.random() * 0.19
     },
     
     COUNTS: {
@@ -14,12 +14,32 @@ const CONFIG = {
         FLOWER_COUNT: 150,
         BIRD_COUNT: 10,
         BUTTERFLY_COUNT: 10,
-        CLOUD_COUNT: 60,
+        CLOUD_COUNT: 10 + Math.floor(Math.random() * 91),
     },
     
     COLORS: {
-        GROUND_COLOR: 0x5ab950,
-        GRASS_COLOR: 0x5ab950,
+        GROUND_COLOR: (() => {
+            // Array de colores de suelo naturales
+            const groundColors = [
+                0x5ab950, // Verde claro
+                0x4a8e3f, // Verde oscuro
+                0x7d5d3b, // Marrón tierra
+                0x8b7355, // Marrón claro
+                0x6b5335, // Marrón oscuro
+                0x8e7f5d, // Beige tierra
+                0x5c4033, // Marrón rojizo
+                0xff6b6b, // Rojo coral
+                0x9370db, // Púrpura medio
+                0x00ced1, // Turquesa oscuro
+                0xff8c00, // Naranja oscuro
+                0x9932cc, // Orquídea oscuro
+                0x1e90ff, // Azul dodger
+                0xffd700  // Oro
+            ];
+            // Seleccionar un color aleatorio del array
+            return groundColors[Math.floor(Math.random() * groundColors.length)];
+        })(),
+        GRASS_COLOR: 0x5ab950, // Verde claro
         TRUNK_COLOR: 0x4a2f21,
         BIRCH_TRUNK_COLOR: 0xd3d3d3
     },
@@ -37,7 +57,7 @@ const CONFIG = {
     },
     
     ANIMATION: {
-        WIND_STRENGTH: 0.05,
+        WIND_STRENGTH: 0.01 + Math.random() * 0.19,
         SKYBOX_ROTATION_SPEED: 0.0005,
         CLOUD_MOVEMENT_SPEED_MIN: 0.002,
         CLOUD_MOVEMENT_SPEED_MAX: 0.02,
@@ -616,6 +636,8 @@ export function sceneInit(scene, loadingManager) {
     });
 
     const blade = createGrassBlade();
+    // Para que no se vea raro el cesped
+    CONFIG.COLORS.GRASS_COLOR = CONFIG.COLORS.GROUND_COLOR;
     const instancedGrass = new THREE.InstancedMesh(
         blade,
         new THREE.MeshStandardMaterial({ 
