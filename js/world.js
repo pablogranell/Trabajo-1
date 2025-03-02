@@ -5,7 +5,7 @@ const CONFIG = {
     WORLD: {
         SIZE: 50,
         TERRAIN_SEGMENTS: 64,
-        FOG_DENSITY: 0.01 + Math.random() * 0.19
+        FOG_DENSITY: 0.01 + Math.random() * 0.09
     },
     
     COUNTS: {
@@ -14,7 +14,7 @@ const CONFIG = {
         FLOWER_COUNT: 150,
         BIRD_COUNT: 10,
         BUTTERFLY_COUNT: 10,
-        CLOUD_COUNT: 10 + Math.floor(Math.random() * 91),
+        CLOUD_COUNT: 50 + Math.floor(Math.random() * 91),
     },
     
     COLORS: {
@@ -50,9 +50,9 @@ const CONFIG = {
         BENCH_INTERACTION_RADIUS: 2,
         MIN_TREE_DISTANCE_FROM_BENCH: 3,
         FLOWER_SPAWN_RADIUS: 40,
-        CLOUD_SPAWN_RADIUS: 120,
-        CLOUD_HEIGHT_MIN: 10,
-        CLOUD_HEIGHT_MAX: 70,
+        CLOUD_SPAWN_RADIUS: 500,
+        CLOUD_HEIGHT_MIN: 200,
+        CLOUD_HEIGHT_MAX: 500,
         SUN_POSITION: { phi: Math.PI * 0.25, theta: Math.PI * 0.1 }
     },
     
@@ -203,8 +203,8 @@ function updateLightingFromSky(scene, sunLight, ambientLight, skyAnalysis) {
                      0.114 * skyAnalysis.dominantColor.b;
     
     const normalizedLuminance = luminance / 255;
-    const minIntensity = 0.5;
-    const maxIntensity = 1.5; 
+    const minIntensity = 0.2;
+    const maxIntensity = 2; 
     sunLight.intensity = minIntensity + normalizedLuminance * (maxIntensity - minIntensity);
     
     const distance = 50;
@@ -662,10 +662,10 @@ export function sceneInit(scene, loadingManager) {
             const y = Math.sin(x * 0.5) * Math.cos(z * 0.5) * 0.5 +
                      Math.sin(x * 0.2) * Math.cos(z * 0.3) * 1;
             
-            const scale = 0.9 + Math.random() * 0.2;
+            const scale = 1 + Math.random() * 0.5;
             
             matrix.makeRotationY(angle);
-            matrix.scale(new THREE.Vector3(scale, scale, scale));
+            matrix.scale(new THREE.Vector3(scale, 1, scale));
             matrix.setPosition(x, y, z);
             
             instancedGrass.setMatrixAt(instanceCount, matrix);
@@ -727,16 +727,6 @@ export function sceneInit(scene, loadingManager) {
     const sunLight = new THREE.DirectionalLight(CONFIG.LIGHTING.SUN_LIGHT_COLOR, CONFIG.LIGHTING.SUN_LIGHT_INTENSITY);
     sunLight.position.set(5, 10, 5);
     sunLight.castShadow = true;
-    
-    sunLight.shadow.mapSize.width = 2048;
-    sunLight.shadow.mapSize.height = 2048;
-    sunLight.shadow.camera.near = 0.5;
-    sunLight.shadow.camera.far = 50;
-    sunLight.shadow.camera.left = -20;
-    sunLight.shadow.camera.right = 20;
-    sunLight.shadow.camera.top = 20;
-    sunLight.shadow.camera.bottom = -20;
-    sunLight.shadow.bias = -0.0001;
     
     scene.add(sunLight);
     
@@ -857,7 +847,7 @@ export function sceneInit(scene, loadingManager) {
         }
         
         cloud.userData = {
-            speed: CONFIG.ANIMATION.CLOUD_MOVEMENT_SPEED_MIN + Math.random() * (CONFIG.ANIMATION.CLOUD_MOVEMENT_SPEED_MAX - CONFIG.ANIMATION.CLOUD_MOVEMENT_SPEED_MIN),
+            speed: (CONFIG.ANIMATION.CLOUD_MOVEMENT_SPEED_MIN + Math.random() * (CONFIG.ANIMATION.CLOUD_MOVEMENT_SPEED_MAX - CONFIG.ANIMATION.CLOUD_MOVEMENT_SPEED_MIN)) * (1 + CONFIG.ANIMATION.WIND_STRENGTH),
             direction: new THREE.Vector3(
                 (Math.random() - 0.5) * 0.15,
                 0,
