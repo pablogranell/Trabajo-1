@@ -35,7 +35,8 @@ const CONFIG = {
         FLOWER_SPAWN_RADIUS: 40,
         CLOUD_SPAWN_RADIUS: 120,
         CLOUD_HEIGHT_MIN: 15,
-        CLOUD_HEIGHT_MAX: 55
+        CLOUD_HEIGHT_MAX: 55,
+        SUN_POSITION: { phi: Math.PI * 0.25, theta: Math.PI * 0.1 }
     },
     
     ANIMATION: {
@@ -53,7 +54,13 @@ const CONFIG = {
     LIGHTING: {
         AMBIENT_LIGHT_INTENSITY: 0.65,
         SUN_LIGHT_INTENSITY: 1.2,
-        SUN_LIGHT_COLOR: 0xfffaed
+        SUN_LIGHT_COLOR: 0xfffaed,
+        SKY_ANALYSIS: {
+            ENABLED: true,
+            UPDATE_INTERVAL: 5000,
+            SAMPLE_SIZE: 16,
+            SUN_SEARCH_RADIUS: 0.2
+        }
     }
 };
 
@@ -64,13 +71,139 @@ const STATE = {
     birds: [],
     butterflies: [],
     clouds: [],
-    time: 0
+    time: 0,
+    skyAnalysis: {
+        dominantColor: new THREE.Color(CONFIG.LIGHTING.SUN_LIGHT_COLOR),
+        sunPosition: new THREE.Vector3(5, 10, 5),
+        lastUpdateTime: 0
+    }
 };
 
 
 function calculateTerrainHeight(x, z) {
     return Math.sin(x * 0.5) * Math.cos(z * 0.5) * 0.5 +
            Math.sin(x * 0.2) * Math.cos(z * 0.3) * 1;
+}
+
+function analyzeSkyTexture(texture, options = {}) {
+    if (!texture || !texture.image) return null;
+    
+    const defaults = {
+        sampleSize: CONFIG.LIGHTING.SKY_ANALYSIS.SAMPLE_SIZE,
+        sunSearchRadius: CONFIG.LIGHTING.SKY_ANALYSIS.SUN_SEARCH_RADIUS,
+        sunPhi: CONFIG.POSITIONS.SUN_POSITION.phi,
+        sunTheta: CONFIG.POSITIONS.SUN_POSITION.theta
+    };
+    
+    const opts = {...defaults, ...options};
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    canvas.width = texture.image.width;
+    canvas.height = texture.image.height;
+    ctx.drawImage(texture.image, 0, 0);
+    
+    const sunX = Math.floor(canvas.width * (0.5 + opts.sunTheta / Math.PI));
+    const sunY = Math.floor(canvas.height * (0.5 - opts.sunPhi / Math.PI));
+    
+    const halfSize = Math.floor(opts.sampleSize / 2);
+    const startX = Math.max(0, sunX - halfSize);
+    const startY = Math.max(0, sunY - halfSize);
+    const endX = Math.min(canvas.width, sunX + halfSize);
+    const endY = Math.min(canvas.height, sunY + halfSize);
+    
+    const imageData = ctx.getImageData(startX, startY, endX - startX, endY - startY);
+    const pixels = imageData.data;
+    
+    let maxBrightness = 0;
+    let brightestColor = {r: 255, g: 255, b: 237};
+    
+    for (let i = 0; i < pixels.length; i += 4) {
+        const r = pixels[i];
+        const g = pixels[i + 1];
+        const b = pixels[i + 2];
+        
+        const brightness = 0.299 * r + 0.587 * g + 0.114 * b;
+        
+        if (brightness > maxBrightness) {
+            maxBrightness = brightness;
+            brightestColor = {r, g, b};
+        }
+    }
+    
+    const skyAnalysisSize = canvas.width / 3;
+    const skyImageData = ctx.getImageData(
+        canvas.width / 3, 
+        canvas.height / 4, 
+        skyAnalysisSize, 
+        skyAnalysisSize / 2
+    );
+    const skyPixels = skyImageData.data;
+    
+    let totalR = 0, totalG = 0, totalB = 0;
+    let count = 0;
+    
+    for (let i = 0; i < skyPixels.length; i += 4) {
+        const r = skyPixels[i];
+        const g = skyPixels[i + 1];
+        const b = skyPixels[i + 2];
+        
+        const brightness = 0.299 * r + 0.587 * g + 0.114 * b;
+        if (brightness < maxBrightness * 0.9 && brightness > 50) {
+            totalR += r;
+            totalG += g;
+            totalB += b;
+            count++;
+        }
+    }
+    
+    const skyColor = count > 0 ? 
+        {
+            r: Math.floor(totalR / count),
+            g: Math.floor(totalG / count),
+            b: Math.floor(totalB / count)
+        } : 
+        {r: 135, g: 206, b: 235};
+    
+    const sunColorHex = (brightestColor.r << 16) | (brightestColor.g << 8) | brightestColor.b;
+    const skyColorHex = (skyColor.r << 16) | (skyColor.g << 8) | skyColor.b;
+    
+    const sunDirection = new THREE.Vector3();
+    sunDirection.setFromSphericalCoords(1, opts.sunPhi, opts.sunTheta);
+    
+    return {
+        dominantColor: new THREE.Color(sunColorHex),
+        skyColor: new THREE.Color(skyColorHex),
+        sunDirection: sunDirection
+    };
+}
+
+function updateLightingFromSky(scene, sunLight, ambientLight, skyAnalysis) {
+    if (!skyAnalysis) return;
+    
+    sunLight.color.copy(skyAnalysis.dominantColor);
+    
+    const luminance = 0.299 * skyAnalysis.dominantColor.r + 
+                     0.587 * skyAnalysis.dominantColor.g + 
+                     0.114 * skyAnalysis.dominantColor.b;
+    
+    const normalizedLuminance = luminance / 255;
+    const minIntensity = 0.8;
+    const maxIntensity = 1.4; 
+    sunLight.intensity = minIntensity + normalizedLuminance * (maxIntensity - minIntensity);
+    
+    const distance = 50;
+    sunLight.position.copy(skyAnalysis.sunDirection).multiplyScalar(distance);
+    sunLight.lookAt(0, 0, 0);
+    
+    ambientLight.color.copy(skyAnalysis.skyColor);
+    
+    ambientLight.intensity = CONFIG.LIGHTING.AMBIENT_LIGHT_INTENSITY * 
+                           (1 - normalizedLuminance * 0.3);
+    
+    if (scene.fog) {
+        scene.fog.color.copy(skyAnalysis.skyColor);
+    }
 }
 
 function createGrassBlade() {
@@ -402,7 +535,7 @@ export function sceneInit(scene, loadingManager) {
     ground.receiveShadow = true;
     scene.add(ground);
 
-    const skyTexture = loadingManager.textureLoader.load('modelos/sky.png', (texture) => {
+    const skyTexture = loadingManager.textureLoader.load('modelos/Cielos/sky.png', (texture) => {
         texture.mapping = THREE.EquirectangularReflectionMapping;
         texture.encoding = THREE.LinearEncoding;
         texture.wrapS = THREE.RepeatWrapping;
@@ -410,6 +543,23 @@ export function sceneInit(scene, loadingManager) {
         texture.repeat.set(1, 1);
         texture.offset.set(0, 0);
         texture.needsUpdate = true;
+        
+        if (CONFIG.LIGHTING.SKY_ANALYSIS.ENABLED && texture.image) {
+            const skyAnalysis = analyzeSkyTexture(texture);
+            if (skyAnalysis) {
+                STATE.skyAnalysis.dominantColor = skyAnalysis.dominantColor;
+                STATE.skyAnalysis.sunPosition = skyAnalysis.sunDirection.clone().multiplyScalar(50);
+                
+                if (window.mainScene && window.mainScene.sunLight && window.mainScene.ambientLight) {
+                    updateLightingFromSky(
+                        scene,
+                        window.mainScene.sunLight,
+                        window.mainScene.ambientLight,
+                        skyAnalysis
+                    );
+                }
+            }
+        }
     });
 
     scene.background = skyTexture;
@@ -567,6 +717,19 @@ export function sceneInit(scene, loadingManager) {
     sunLight.shadow.bias = -0.0001;
     
     scene.add(sunLight);
+    
+    if (!window.mainScene) window.mainScene = {};
+    window.mainScene.sunLight = sunLight;
+    window.mainScene.ambientLight = ambientLight;
+    
+    if (STATE.skyAnalysis.dominantColor) {
+        const skyAnalysis = {
+            dominantColor: STATE.skyAnalysis.dominantColor,
+            skyColor: scene.fog.color,
+            sunDirection: STATE.skyAnalysis.sunPosition.clone().normalize()
+        };
+        updateLightingFromSky(scene, sunLight, ambientLight, skyAnalysis);
+    }
 
     function createBird() {
         const bird = new THREE.Group();
@@ -1111,6 +1274,7 @@ export function sceneInit(scene, loadingManager) {
             this.animateButterflies();
             this.animatePollenParticles();
             this.animateMist();
+            this.updateSkyLighting();
             
             requestAnimationFrame(() => this.animate());
         },
@@ -1393,6 +1557,43 @@ export function sceneInit(scene, loadingManager) {
                     userData.originalY += (terrainY + 0.02 - userData.originalY) * 0.001;
                 });
             });
+        },
+        
+        updateSkyLighting: function() {
+            if (!CONFIG.LIGHTING.SKY_ANALYSIS.ENABLED) return;
+            
+            const currentTime = performance.now();
+            if (currentTime - STATE.skyAnalysis.lastUpdateTime < CONFIG.LIGHTING.SKY_ANALYSIS.UPDATE_INTERVAL) {
+                return;
+            }
+            
+            STATE.skyAnalysis.lastUpdateTime = currentTime;
+            
+            if (!window.mainScene || !window.mainScene.sunLight || !window.mainScene.ambientLight) {
+                return;
+            }
+            
+            const scene = window.mainScene.sunLight.parent;
+            if (!scene) return;
+            
+            const sunLight = window.mainScene.sunLight;
+            const ambientLight = window.mainScene.ambientLight;
+            
+            if (STATE.skyAnalysis.dominantColor) {
+                const skyAnalysis = {
+                    dominantColor: STATE.skyAnalysis.dominantColor,
+                    skyColor: scene.fog ? scene.fog.color : new THREE.Color(0x87ceeb),
+                    sunDirection: STATE.skyAnalysis.sunPosition.clone().normalize()
+                };
+                
+                sunLight.position.copy(STATE.skyAnalysis.sunPosition);
+                sunLight.lookAt(0, 0, 0);
+            }
+            
+            if (scene.background && scene.background.isTexture && CONFIG.ANIMATION.SKYBOX_ROTATION_SPEED !== 0) {
+                scene.background.offset.x += CONFIG.ANIMATION.SKYBOX_ROTATION_SPEED;
+                scene.background.needsUpdate = true;
+            }
         }
     };
 
