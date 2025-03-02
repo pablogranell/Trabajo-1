@@ -104,7 +104,6 @@ function createGrassBlade() {
     return geometry;
 }
 
-// Create different types of trees
 function createTree(type = Math.floor(Math.random() * 3)) {
     const group = new THREE.Group();
     let trunkMaterial = new THREE.MeshPhongMaterial({ 
@@ -112,13 +111,12 @@ function createTree(type = Math.floor(Math.random() * 3)) {
         flatShading: true 
     });
 
-    // Variables para guardar referencia a las hojas de los árboles
     let foliages = [];
     let pineCones = [];
     let branches = [];
 
     switch(type) {
-        case 0: // Pine tree
+        case 0:
             const pineHeight = 2 + Math.random();
             const trunk = new THREE.Mesh(
                 new THREE.CylinderGeometry(0.15, 0.2, pineHeight, 8),
@@ -132,10 +130,9 @@ function createTree(type = Math.floor(Math.random() * 3)) {
             const baseHeight = pineHeight + 0.2;
             
             for(let i = 0; i < levels; i++) {
-                const coneHeight = 0.8 + (i * 0.1); // Larger at bottom
-                const coneRadius = 0.7 + (i * 0.15); // Wider at bottom
+                const coneHeight = 0.8 + (i * 0.1);
+                const coneRadius = 0.7 + (i * 0.15);
                 
-                // Añadir variación en el color
                 const coneColor = new THREE.Color(0x2d5a27).lerp(
                     new THREE.Color(0x3d8e40), 
                     Math.random() * 0.3
@@ -149,17 +146,14 @@ function createTree(type = Math.floor(Math.random() * 3)) {
                         roughness: 1
                     })
                 );
-                // Position cones from top to bottom
                 cone.position.y = baseHeight - (i * coneSpacing);
                 group.add(cone);
                 
-                // Guardar referencia para la animación
                 pineCones.push(cone);
             }
             break;
 
-        case 1: // Oak tree
-            // Crear un tronco más orgánico con pequeñas curvas
+        case 1:
             const trunkHeight = 2 + Math.random() * 0.5;
             const oakTrunk = new THREE.Mesh(
                 new THREE.CylinderGeometry(0.25, 0.35, trunkHeight, 8),
@@ -167,34 +161,6 @@ function createTree(type = Math.floor(Math.random() * 3)) {
             );
             oakTrunk.position.y = trunkHeight / 2;
             group.add(oakTrunk);
-            
-            // Añadir algunas ramas al tronco
-            const branchCount = 2 + Math.floor(Math.random() * 3);
-            for (let i = 0; i < branchCount; i++) {
-                const branchHeight = 0.5 + Math.random() * 0.8;
-                const branch = new THREE.Mesh(
-                    new THREE.CylinderGeometry(0.06, 0.1, branchHeight, 6),
-                    trunkMaterial
-                );
-                
-                // Posicionar la rama en el tronco
-                const branchY = (trunkHeight / 2) * (0.4 + Math.random() * 0.6);
-                const branchAngle = (Math.PI / 4) + Math.random() * (Math.PI / 4);
-                const branchRotation = Math.random() * Math.PI * 2;
-                
-                // Posición base en el tronco
-                branch.position.set(0, branchY, 0);
-                
-                // Rotar la rama hacia afuera
-                branch.rotation.z = branchAngle;
-                branch.rotation.y = branchRotation;
-                
-                // Ajustar la posición de la rama
-                branch.translateX(branchHeight / 2);
-                
-                branches.push(branch);
-                group.add(branch);
-            }
 
             const foliageGeometry = new THREE.SphereGeometry(1.2, 8, 6);
             const foliageMaterial = new THREE.MeshStandardMaterial({
@@ -203,7 +169,7 @@ function createTree(type = Math.floor(Math.random() * 3)) {
                 roughness: 1
             });
 
-            for(let i = 0; i < 4; i++) { // Aumentado a 4 
+            for(let i = 0; i < 4; i++) {
                 const foliage = new THREE.Mesh(
                     foliageGeometry, 
                     new THREE.MeshStandardMaterial({
@@ -226,14 +192,13 @@ function createTree(type = Math.floor(Math.random() * 3)) {
                     0.7 + Math.random() * 0.3
                 );
                 
-                // Guardar referencia para la animación
                 foliages.push(foliage);
                 
                 group.add(foliage);
             }
             break;
 
-        case 2: // Birch tree
+        case 2:
             const birchTrunk = new THREE.Mesh(
                 new THREE.CylinderGeometry(0.15, 0.2, 3, 8),
                 new THREE.MeshPhongMaterial({ 
@@ -246,8 +211,7 @@ function createTree(type = Math.floor(Math.random() * 3)) {
 
             const leafGeometry = new THREE.IcosahedronGeometry(0.8, 0);
             
-            for(let i = 0; i < 5; i++) { // Aumentado a 5
-                // Diferentes tonos de verde claro para los abedules
+            for(let i = 0; i < 5; i++) {
                 const leafColor = new THREE.Color(0x98fb98).lerp(
                     new THREE.Color(0xaaffaa), 
                     Math.random() * 0.5
@@ -272,30 +236,27 @@ function createTree(type = Math.floor(Math.random() * 3)) {
                     Math.random() * Math.PI
                 );
                 
-                foliages.push(leaves); // Añadir referencia para animación
+                foliages.push(leaves);
                 group.add(leaves);
             }
             break;
     }
 
-    // Guardar referencias para animación
     group.userData = {
         type: type,
         foliages: foliages,
         pineCones: pineCones,
         branches: branches,
-        windFactor: 0.5 + Math.random() * 0.5, // Factor aleatorio para el viento
-        phase: Math.random() * Math.PI * 2,    // Fase aleatoria para movimientos variados
+        windFactor: 0.5 + Math.random() * 0.5,
+        phase: Math.random() * Math.PI * 2,
     };
 
     return group;
 }
 
-// Create different types of flowers
 function createFlower(type = Math.floor(Math.random() * 3)) {
     const group = new THREE.Group();
     
-    // Common stem
     const stemGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.5, 8);
     const stemMaterial = new THREE.MeshPhongMaterial({ color: 0x2d5a27 });
     const stem = new THREE.Mesh(stemGeometry, stemMaterial);
@@ -303,31 +264,54 @@ function createFlower(type = Math.floor(Math.random() * 3)) {
     group.add(stem);
 
     switch(type) {
-        case 0: // Daisy-like flower
+        case 0:
             const centerGeometry = new THREE.SphereGeometry(0.08, 8, 8);
             const centerMaterial = new THREE.MeshPhongMaterial({ color: 0xffd700 });
             const center = new THREE.Mesh(centerGeometry, centerMaterial);
             center.position.y = 0.5;
             group.add(center);
 
-            const petalCount = 8;
+            const petalCount = 12;
             const petalColor = new THREE.Color().setHSL(Math.random() * 0.1 + 0.1, 0.8, 0.9);
             for (let i = 0; i < petalCount; i++) {
                 const petal = new THREE.Mesh(
                     new THREE.PlaneGeometry(0.15, 0.08),
                     new THREE.MeshPhongMaterial({ 
                         color: petalColor,
-                        side: THREE.DoubleSide
+                        side: THREE.DoubleSide,
+                        transparent: true,
+                        opacity: 0.9
                     })
                 );
                 petal.position.y = 0.5;
-                petal.rotation.y = (Math.PI / petalCount) * i;
-                petal.rotation.x = Math.PI / 3; // Corrected petal angle
+                petal.rotation.y = (Math.PI * 2 / petalCount) * i;
+                petal.rotation.x = Math.PI / 2.5;
+                
+                petal.rotation.z = (Math.random() - 0.5) * 0.2;
+                
+                const scale = 0.8 + Math.random() * 0.4;
+                petal.scale.set(scale, scale, scale);
+                
                 group.add(petal);
+            }
+            
+            const leafGeometry = new THREE.PlaneGeometry(0.1, 0.05);
+            const leafMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x2d8a27, 
+                side: THREE.DoubleSide 
+            });
+            
+            for (let i = 0; i < 2; i++) {
+                const leaf = new THREE.Mesh(leafGeometry, leafMaterial);
+                leaf.position.y = 0.15 + i * 0.15;
+                leaf.position.x = 0.05;
+                leaf.rotation.x = Math.PI / 2;
+                leaf.rotation.y = Math.PI / 4;
+                group.add(leaf);
             }
             break;
 
-        case 1: // Bell-like flower
+        case 1:
             const bellGeometry = new THREE.ConeGeometry(0.12, 0.2, 8, 1, true);
             const bellMaterial = new THREE.MeshPhongMaterial({ 
                 color: new THREE.Color().setHSL(Math.random() * 0.2 + 0.7, 0.8, 0.6),
@@ -335,11 +319,11 @@ function createFlower(type = Math.floor(Math.random() * 3)) {
             });
             const bell = new THREE.Mesh(bellGeometry, bellMaterial);
             bell.position.y = 0.5;
-            bell.rotation.x = Math.PI; // Make bell face downward
+            bell.rotation.x = Math.PI;
             group.add(bell);
             break;
 
-        case 2: // Tulip-like flower
+        case 2:
             const petalMaterial = new THREE.MeshPhongMaterial({ 
                 color: new THREE.Color().setHSL(Math.random(), 0.8, 0.6),
                 shininess: 30
@@ -351,7 +335,7 @@ function createFlower(type = Math.floor(Math.random() * 3)) {
                     petalMaterial
                 );
                 petal.position.y = 0.5;
-                petal.rotation.z = -Math.PI / 6; // Corrected petal angle
+                petal.rotation.z = -Math.PI / 6;
                 petal.rotation.y = (Math.PI / 3) * i;
                 group.add(petal);
             }
@@ -362,7 +346,6 @@ function createFlower(type = Math.floor(Math.random() * 3)) {
 }
 
 export function sceneInit(scene, loadingManager) {
-    // Create ground with terrain variation
     const size = CONFIG.WORLD.SIZE;
     const segments = CONFIG.WORLD.TERRAIN_SEGMENTS;
     const halfSize = size / 2;
@@ -371,7 +354,6 @@ export function sceneInit(scene, loadingManager) {
     const indices = [];
     const uvs = [];
     
-    // Create vertices
     for(let i = 0; i <= segments; i++) {
         const y = (i * size) / segments - halfSize;
         for(let j = 0; j <= segments; j++) {
@@ -383,7 +365,6 @@ export function sceneInit(scene, loadingManager) {
         }
     }
     
-    // Create indices
     for(let i = 0; i < segments; i++) {
         for(let j = 0; j < segments; j++) {
             const a = i * (segments + 1) + j;
@@ -412,11 +393,9 @@ export function sceneInit(scene, loadingManager) {
     ground.receiveShadow = true;
     scene.add(ground);
 
-    // Create skybox using loadingManager
     const skyTexture = loadingManager.textureLoader.load('modelos/sky.png', (texture) => {
         texture.mapping = THREE.EquirectangularReflectionMapping;
         texture.encoding = THREE.LinearEncoding;
-        // Configurar propiedades de textura para permitir rotación horizontal
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.ClampToEdgeWrapping;
         texture.repeat.set(1, 1);
@@ -424,18 +403,14 @@ export function sceneInit(scene, loadingManager) {
         texture.needsUpdate = true;
     });
 
-    // Establecer el cielo directamente como fondo
     scene.background = skyTexture;
     scene.fog = new THREE.FogExp2(0x87ceeb, CONFIG.WORLD.FOG_DENSITY);
 
-    // Load stone bench model
     const fbxLoader = new FBXLoader(loadingManager.getManager());
     fbxLoader.load('modelos/3D/stone_bench_01_m13.fbx', (bench) => {
         bench.scale.set(1, 1.5, 1);
-        // Position the bench
         bench.position.copy(CONFIG.POSITIONS.BENCH_POSITION);
         
-        // Make the bench cast and receive shadows
         bench.traverse((child) => {
             if (child.isMesh) {
                 child.castShadow = true;
@@ -443,26 +418,22 @@ export function sceneInit(scene, loadingManager) {
             }
         });
         
-        // Agregar referencia al banco en la escena global
         window.mainScene.bench = bench;
         
-        // Crear esfera invisible para interacción
-        const interactionRadius = CONFIG.POSITIONS.BENCH_INTERACTION_RADIUS; // Radio de interacción
+        const interactionRadius = CONFIG.POSITIONS.BENCH_INTERACTION_RADIUS;
         const interactionGeometry = new THREE.SphereGeometry(interactionRadius);
         const interactionMaterial = new THREE.MeshBasicMaterial({
             color: 0xff0000,
             transparent: true,
-            opacity: 0, // Invisible al jugador
+            opacity: 0,
             depthWrite: false
         });
         const interactionSphere = new THREE.Mesh(interactionGeometry, interactionMaterial);
         interactionSphere.position.copy(bench.position);
-        interactionSphere.position.y += 1; // Ajustar altura de la esfera
+        interactionSphere.position.y += 1;
         
-        // Agregar la esfera a la escena
         scene.add(interactionSphere);
         
-        // Crear texto flotante para indicar interacción
         const benchIndicator = document.createElement('div');
         benchIndicator.id = 'bench-indicator';
         benchIndicator.textContent = 'Pulsa E para sentarte';
@@ -479,14 +450,12 @@ export function sceneInit(scene, loadingManager) {
         benchIndicator.style.zIndex = '1000';
         document.body.appendChild(benchIndicator);
         
-        // Referencia a la esfera y al indicador
         window.mainScene.benchInteractionSphere = interactionSphere;
         window.mainScene.benchIndicator = benchIndicator;
         
         scene.add(bench);
     });
 
-    // Create grass instances with density based on distance
     const blade = createGrassBlade();
     const instancedGrass = new THREE.InstancedMesh(
         blade,
@@ -502,7 +471,6 @@ export function sceneInit(scene, loadingManager) {
     const matrix = new THREE.Matrix4();
     let instanceCount = 0;
     
-    // Crear césped con densidad basada en la distancia
     for (let i = 0; i < CONFIG.COUNTS.GRASS_INSTANCES_MAX; i++) {
         const x = (Math.random() - 0.5) * 40;
         const z = (Math.random() - 0.5) * 40;
@@ -513,7 +481,6 @@ export function sceneInit(scene, loadingManager) {
             const y = Math.sin(x * 0.5) * Math.cos(z * 0.5) * 0.5 +
                      Math.sin(x * 0.2) * Math.cos(z * 0.3) * 1;
             
-            // Escala más uniforme
             const scale = 0.9 + Math.random() * 0.2;
             
             matrix.makeRotationY(angle);
@@ -534,18 +501,15 @@ export function sceneInit(scene, loadingManager) {
     instancedGrass.instanceMatrix.needsUpdate = true;
     scene.add(instancedGrass);
 
-    // Add trees with varied types
     for (let i = 0; i < CONFIG.COUNTS.TREE_COUNT; i++) {
         const x = (Math.random() - 0.5) * CONFIG.POSITIONS.TREE_SPAWN_RADIUS;
         const z = (Math.random() - 0.5) * CONFIG.POSITIONS.TREE_SPAWN_RADIUS;
         
-        // Verificar distancia al banco (posición del banco: -5, 0.3, 5)
         const treePosition = new THREE.Vector3(x, 0, z);
         const distanceToBench = treePosition.distanceTo(CONFIG.POSITIONS.BENCH_POSITION);
         
-        // Si está muy cerca del banco, continuar a la siguiente iteración
         if (distanceToBench < CONFIG.POSITIONS.MIN_TREE_DISTANCE_FROM_BENCH) {
-            i--; // Repetir esta iteración
+            i--;
             continue;
         }
         
@@ -555,16 +519,14 @@ export function sceneInit(scene, loadingManager) {
         
         tree.position.set(x, y, z);
         
-        // Tamaño y rotación aleatorios para variedad
         const scale = 0.8 + Math.random() * 0.6;
         tree.scale.set(scale, scale, scale);
         tree.rotation.y = Math.random() * Math.PI * 2;
         
         scene.add(tree);
-        STATE.trees.push(tree); // Guardar referencia al árbol
+        STATE.trees.push(tree);
     }
 
-    // Add flowers with varied types
     for (let i = 0; i < CONFIG.COUNTS.FLOWER_COUNT; i++) {
         const x = (Math.random() - 0.5) * CONFIG.POSITIONS.FLOWER_SPAWN_RADIUS;
         const z = (Math.random() - 0.5) * CONFIG.POSITIONS.FLOWER_SPAWN_RADIUS;
@@ -578,7 +540,6 @@ export function sceneInit(scene, loadingManager) {
         scene.add(flower);
     }
 
-    // Enhanced lighting
     const ambientLight = new THREE.AmbientLight(0xffffff, CONFIG.LIGHTING.AMBIENT_LIGHT_INTENSITY);
     scene.add(ambientLight);
 
@@ -586,7 +547,6 @@ export function sceneInit(scene, loadingManager) {
     sunLight.position.set(5, 10, 5);
     sunLight.castShadow = true;
     
-    // Mejorar las sombras
     sunLight.shadow.mapSize.width = 2048;
     sunLight.shadow.mapSize.height = 2048;
     sunLight.shadow.camera.near = 0.5;
@@ -599,23 +559,20 @@ export function sceneInit(scene, loadingManager) {
     
     scene.add(sunLight);
 
-    // Añadir pájaros volando para dar más vida a la escena
     function createBird() {
         const bird = new THREE.Group();
         
-        // Cuerpo del pájaro
         const bodyGeometry = new THREE.SphereGeometry(0.1, 8, 6);
         const bodyMaterial = new THREE.MeshStandardMaterial({
-            color: 0xffffff, // Cambiado a blanco
+            color: 0xffffff,
             roughness: 0.7
         });
         const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
         bird.add(body);
         
-        // Alas
         const wingGeometry = new THREE.PlaneGeometry(0.3, 0.15);
         const wingMaterial = new THREE.MeshStandardMaterial({
-            color: 0xffffff, // Cambiado a blanco
+            color: 0xffffff,
             roughness: 0.7,
             side: THREE.DoubleSide
         });
@@ -628,7 +585,6 @@ export function sceneInit(scene, loadingManager) {
         rightWing.position.set(0.15, 0, 0);
         bird.add(rightWing);
         
-        // Añadir una pequeña cola
         const tailGeometry = new THREE.ConeGeometry(0.05, 0.15, 4);
         const tailMaterial = new THREE.MeshStandardMaterial({
             color: 0xffffff,
@@ -639,7 +595,6 @@ export function sceneInit(scene, loadingManager) {
         tail.rotation.x = Math.PI / 2;
         bird.add(tail);
         
-        // Datos para animación
         bird.userData = {
             speed: CONFIG.ANIMATION.BIRD_SPEED_MIN + Math.random() * (CONFIG.ANIMATION.BIRD_SPEED_MAX - CONFIG.ANIMATION.BIRD_SPEED_MIN),
             angle: Math.random() * Math.PI * 2,
@@ -649,13 +604,12 @@ export function sceneInit(scene, loadingManager) {
             leftWing: leftWing,
             rightWing: rightWing,
             tail: tail,
-            flapPhase: Math.random() * Math.PI * 2 // Fase aleatoria para el aleteo
+            flapPhase: Math.random() * Math.PI * 2
         };
         
         return bird;
     }
 
-    // Añadir pájaros a la escena
     const birds = [];
     for (let i = 0; i < CONFIG.COUNTS.BIRD_COUNT; i++) {
         const bird = createBird();
@@ -663,14 +617,11 @@ export function sceneInit(scene, loadingManager) {
         birds.push(bird);
     }
 
-    // Crear nubes
     function createCloud() {
         const cloud = new THREE.Group();
         
-        // Simplificar aún más: reducir el número de esferas a 3-6 para un aspecto minimalista
         const sphereCount = 3 + Math.floor(Math.random() * 3);
         
-        // Material común con opacidad completa para todas las esferas
         const cloudMaterial = new THREE.MeshStandardMaterial({
             color: 0xffffff,
             transparent: false,
@@ -679,28 +630,23 @@ export function sceneInit(scene, loadingManager) {
             metalness: 0.1
         });
         
-        // Crear una forma principal más grande y simple
         const coreRadius = 2.5 + Math.random() * 2;
         const core = new THREE.Mesh(
-            new THREE.SphereGeometry(coreRadius, 8, 6), // Reducir resolución para más sencillez
+            new THREE.SphereGeometry(coreRadius, 8, 6),
             cloudMaterial
         );
         
-        // Aplastar la nube verticalmente para un aspecto más natural
         const flattenY = 0.4 + Math.random() * 0.2;
         core.scale.y = flattenY;
         cloud.add(core);
         
-        // Añadir muy pocas esferas adicionales para mantener la simplicidad
         for (let i = 0; i < sphereCount; i++) {
-            // Tamaño más consistente para una apariencia más unificada
             const radius = (1.5 + Math.random() * 1.2) * (1 - i/sphereCount * 0.2);
             const sphere = new THREE.Mesh(
-                new THREE.SphereGeometry(radius, 6, 4), // Menor resolución
+                new THREE.SphereGeometry(radius, 6, 4),
                 cloudMaterial
             );
             
-            // Distribuir las esferas de manera más uniforme alrededor del centro
             const angle = (i / sphereCount) * Math.PI * 2;
             const distance = 0.8 * coreRadius;
             
@@ -710,13 +656,11 @@ export function sceneInit(scene, loadingManager) {
                 Math.sin(angle) * distance
             );
             
-            // Las esferas periféricas son más achatadas
             sphere.scale.y = flattenY * (0.85 + Math.random() * 0.15);
             
             cloud.add(sphere);
         }
         
-        // Datos para animación
         cloud.userData = {
             speed: CONFIG.ANIMATION.CLOUD_MOVEMENT_SPEED_MIN + Math.random() * (CONFIG.ANIMATION.CLOUD_MOVEMENT_SPEED_MAX - CONFIG.ANIMATION.CLOUD_MOVEMENT_SPEED_MIN),
             direction: new THREE.Vector3(
@@ -734,54 +678,43 @@ export function sceneInit(scene, loadingManager) {
         return cloud;
     }
     
-    // Añadir nubes a la escena - Aumentamos significativamente el número
     const clouds = [];
     for (let i = 0; i < CONFIG.COUNTS.CLOUD_COUNT; i++) {
         const cloud = createCloud();
         
-        // Mayor distribución espacial
         const radius = Math.random() * CONFIG.POSITIONS.CLOUD_SPAWN_RADIUS;
         const angle = Math.random() * Math.PI * 2;
         const x = Math.cos(angle) * radius;
         const z = Math.sin(angle) * radius;
         
-        // Mayor variación en altura para distribuir en diferentes capas
-        const y = 15 + Math.random() * 40; // Ampliado rango vertical
+        const y = 15 + Math.random() * 40;
         
         cloud.position.set(x, y, z);
         cloud.userData.initialPosition.copy(cloud.position);
         
-        // Mayor variación en escala
-        const scale = 0.4 + Math.random() * 3.0; // Ampliado rango de escala
+        const scale = 0.4 + Math.random() * 3.0;
         cloud.scale.set(scale, scale, scale);
         
-        // Rotación inicial aleatoria
         cloud.rotation.y = Math.random() * Math.PI * 2;
         
         scene.add(cloud);
         clouds.push(cloud);
     }
     
-    // Crear mariposas mejoradas
     function createButterfly() {
         const butterfly = new THREE.Group();
         
-        // Color aleatorio para la mariposa
         const hue = Math.random();
         let butterflyColor, secondaryColor;
         
-        // Colores más realistas para mariposas
         if (Math.random() < 0.5) {
-            // Colores vibrantes
             butterflyColor = new THREE.Color().setHSL(hue, 0.85, 0.6);
             secondaryColor = new THREE.Color().setHSL((hue + 0.1) % 1, 0.8, 0.5);
         } else {
-            // Colores pastel
             butterflyColor = new THREE.Color().setHSL(hue, 0.5, 0.7);
             secondaryColor = new THREE.Color().setHSL((hue + 0.5) % 1, 0.4, 0.6);
         }
         
-        // Cuerpo más detallado
         const bodyGeometry = new THREE.CylinderGeometry(0.015, 0.02, 0.1, 8);
         const bodyMaterial = new THREE.MeshStandardMaterial({
             color: 0x222222,
@@ -791,7 +724,6 @@ export function sceneInit(scene, loadingManager) {
         body.rotation.x = Math.PI / 2;
         butterfly.add(body);
         
-        // Cabeza
         const headGeometry = new THREE.SphereGeometry(0.02, 8, 8);
         const headMaterial = new THREE.MeshStandardMaterial({
             color: 0x303030,
@@ -801,7 +733,6 @@ export function sceneInit(scene, loadingManager) {
         head.position.set(0, 0, -0.05);
         butterfly.add(head);
         
-        // Antenas
         const antennaMaterial = new THREE.MeshStandardMaterial({
             color: 0x222222,
             roughness: 0.9
@@ -815,7 +746,6 @@ export function sceneInit(scene, loadingManager) {
             antenna.rotation.z = (i === 0 ? 1 : -1) * Math.PI / 8;
             butterfly.add(antenna);
             
-            // Extremo de antena
             const tipGeometry = new THREE.SphereGeometry(0.004, 4, 4);
             const tip = new THREE.Mesh(tipGeometry, antennaMaterial);
             tip.position.copy(antenna.position);
@@ -824,14 +754,11 @@ export function sceneInit(scene, loadingManager) {
             butterfly.add(tip);
         }
         
-        // Alas mejoradas - usar forma más realista con textura
         function createWing(isLeft) {
             const wingGroup = new THREE.Group();
             
-            // Ala superior con forma más realista
             const upperWingShape = new THREE.Shape();
             
-            // Crear forma de ala con curvas para hacerla más realista
             upperWingShape.moveTo(0, 0);
             upperWingShape.bezierCurveTo(
                 0.05, 0.02,
@@ -851,7 +778,6 @@ export function sceneInit(scene, loadingManager) {
             
             const upperWingGeometry = new THREE.ShapeGeometry(upperWingShape);
             
-            // Material con patrones
             const wingMaterial = new THREE.MeshStandardMaterial({
                 color: butterflyColor,
                 transparent: true,
@@ -862,7 +788,6 @@ export function sceneInit(scene, loadingManager) {
             
             const upperWing = new THREE.Mesh(upperWingGeometry, wingMaterial);
             
-            // Ala inferior con diferente forma
             const lowerWingShape = new THREE.Shape();
             lowerWingShape.moveTo(0, 0);
             lowerWingShape.bezierCurveTo(
@@ -883,7 +808,6 @@ export function sceneInit(scene, loadingManager) {
             
             const lowerWingGeometry = new THREE.ShapeGeometry(lowerWingShape);
             
-            // Material ligeramente diferente para ala inferior
             const lowerWingMaterial = new THREE.MeshStandardMaterial({
                 color: secondaryColor,
                 transparent: true,
@@ -894,14 +818,11 @@ export function sceneInit(scene, loadingManager) {
             
             const lowerWing = new THREE.Mesh(lowerWingGeometry, lowerWingMaterial);
             
-            // Patrones en las alas (círculos o líneas)
-            if (Math.random() < 0.7) { // 70% de las mariposas tienen patrones
+            if (Math.random() < 0.7) {
                 const patternCount = Math.floor(Math.random() * 3) + 1;
                 
                 for (let i = 0; i < patternCount; i++) {
-                    // Elegir entre círculos o líneas
                     if (Math.random() < 0.5) {
-                        // Círculos
                         const patternGeometry = new THREE.CircleGeometry(0.01 + Math.random() * 0.02, 8);
                         const patternMaterial = new THREE.MeshBasicMaterial({
                             color: Math.random() < 0.5 ? 0x000000 : 0xffffff,
@@ -919,7 +840,6 @@ export function sceneInit(scene, loadingManager) {
                         
                         upperWing.add(pattern);
                     } else {
-                        // Líneas
                         const lineGeometry = new THREE.PlaneGeometry(0.02 + Math.random() * 0.04, 0.005);
                         const lineMaterial = new THREE.MeshBasicMaterial({
                             color: Math.random() < 0.5 ? 0x000000 : 0xffffff,
@@ -944,7 +864,6 @@ export function sceneInit(scene, loadingManager) {
             wingGroup.add(upperWing);
             wingGroup.add(lowerWing);
             
-            // Reflejar para el lado opuesto si es necesario
             if (!isLeft) {
                 wingGroup.scale.x = -1;
             }
@@ -952,7 +871,6 @@ export function sceneInit(scene, loadingManager) {
             return wingGroup;
         }
         
-        // Crear alas izquierda y derecha
         const leftWing = createWing(true);
         leftWing.position.set(-0.01, 0, 0);
         butterfly.add(leftWing);
@@ -961,7 +879,6 @@ export function sceneInit(scene, loadingManager) {
         rightWing.position.set(0.01, 0, 0);
         butterfly.add(rightWing);
         
-        // Datos para animación
         butterfly.userData = {
             speed: 0.02 + Math.random() * 0.03,
             targetPosition: new THREE.Vector3(),
@@ -981,16 +898,13 @@ export function sceneInit(scene, loadingManager) {
         return butterfly;
     }
     
-    // Añadir mariposas cerca de las flores
     const butterflies = [];
     for (let i = 0; i < 10; i++) {
         const butterfly = createButterfly();
         
-        // Posicionar cerca de flores aleatorias
         if (STATE.flowers.length > 0) {
             const randomFlower = STATE.flowers[Math.floor(Math.random() * STATE.flowers.length)];
             
-            // Añadir un poco de desplazamiento aleatorio desde la flor
             const offsetX = (Math.random() - 0.5) * 3;
             const offsetZ = (Math.random() - 0.5) * 3;
             
@@ -1000,7 +914,6 @@ export function sceneInit(scene, loadingManager) {
                 randomFlower.position.z + offsetZ
             );
             
-            // Crear waypoints aleatorios para vuelo de la mariposa
             const waypointCount = 3 + Math.floor(Math.random() * 3);
             for (let j = 0; j < waypointCount; j++) {
                 butterfly.userData.waypoints.push(new THREE.Vector3(
@@ -1010,7 +923,6 @@ export function sceneInit(scene, loadingManager) {
                 ));
             }
             
-            // Establecer el primer objetivo
             butterfly.userData.targetPosition.copy(butterfly.userData.waypoints[0]);
             
             scene.add(butterfly);
@@ -1018,24 +930,18 @@ export function sceneInit(scene, loadingManager) {
         }
     }
     
-    // Crear sistema de partículas para polen flotando
     function createPollenParticles() {
-        // Geometría para las partículas
         const particlesGeometry = new THREE.BufferGeometry();
         const particleCount = 400;
         
-        // Posiciones aleatorias
         const positions = new Float32Array(particleCount * 3);
         const velocities = [];
         const sizes = new Float32Array(particleCount);
         
-        // Distribuir partículas de polen por la escena cerca de flores
         for (let i = 0; i < particleCount; i++) {
-            // Si hay flores, distribuir cerca de flores aleatorias
             if (STATE.flowers.length > 0) {
                 const randomFlower = STATE.flowers[Math.floor(Math.random() * STATE.flowers.length)];
                 
-                // Añadir un offset aleatorio desde la flor
                 const offsetX = (Math.random() - 0.5) * 4;
                 const offsetZ = (Math.random() - 0.5) * 4;
                 const offsetY = Math.random() * 2;
@@ -1044,37 +950,31 @@ export function sceneInit(scene, loadingManager) {
                 positions[i * 3 + 1] = randomFlower.position.y + offsetY;
                 positions[i * 3 + 2] = randomFlower.position.z + offsetZ;
             } else {
-                // Si no hay flores, distribuir aleatoriamente
                 positions[i * 3] = (Math.random() - 0.5) * 40;
                 positions[i * 3 + 1] = 0.5 + Math.random() * 2;
                 positions[i * 3 + 2] = (Math.random() - 0.5) * 40;
             }
             
-            // Velocidad para animación
             velocities.push({
                 x: (Math.random() - 0.5) * 0.005,
                 y: (Math.random() - 0.5) * 0.005,
                 z: (Math.random() - 0.5) * 0.005
             });
             
-            // Tamaños aleatorios para las partículas - REDUCIDOS AÚN MÁS
-            sizes[i] = 0.025 + Math.random() * 0.025; // Reducido de 0.05-0.1 a 0.025-0.05
+            sizes[i] = 0.025 + Math.random() * 0.025;
         }
         
         particlesGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
         
-        // Crear textura circular para las partículas
         const canvas = document.createElement('canvas');
         canvas.width = 128;
         canvas.height = 128;
         const context = canvas.getContext('2d');
         
-        // Dibujar un círculo blanco con borde suave
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
         const radius = canvas.width / 2 - 2;
         
-        // Crear gradiente radial
         const gradient = context.createRadialGradient(
             centerX, centerY, 0,
             centerX, centerY, radius
@@ -1083,19 +983,16 @@ export function sceneInit(scene, loadingManager) {
         gradient.addColorStop(0.7, 'rgba(255, 255, 0, 0.8)');
         gradient.addColorStop(1, 'rgba(255, 255, 0, 0)');
         
-        // Dibujar círculo
         context.fillStyle = gradient;
         context.beginPath();
         context.arc(centerX, centerY, radius, 0, Math.PI * 2);
         context.fill();
         
-        // Crear textura desde el canvas
         const texture = new THREE.CanvasTexture(canvas);
         
-        // Material para las partículas circulares y brillantes - TAMAÑO REDUCIDO AÚN MÁS
         const particlesMaterial = new THREE.PointsMaterial({
             color: 0xffff00,
-            size: 0.075, // Reducido de 0.15 a 0.075
+            size: 0.075,
             map: texture,
             transparent: true,
             opacity: 1.0,
@@ -1116,132 +1013,33 @@ export function sceneInit(scene, loadingManager) {
         return pollenSystem;
     }
     
-    // Añadir sistema de partículas
     const pollenSystem = createPollenParticles();
     scene.add(pollenSystem);
-    
-    // Crear efecto de luz ambiental cambiante 
-    const cyclicalLight = new THREE.DirectionalLight(0xffffaa, 0.2);
-    cyclicalLight.position.set(-5, 8, -5);
-    scene.add(cyclicalLight);
 
-    // Variable para la rotación del skybox
-    let skyRotation = 0;
-
-    // Crear esferas de luz flotantes que simulan abejas/luciérnagas
-    function createLightOrbs() {
-        const orbGroup = new THREE.Group();
-        const orbCount = 30;
-        
-        // Geometría base para todas las esferas
-        const orbGeometry = new THREE.SphereGeometry(0.03, 8, 8);
-        
-        // Array para guardar referencias a cada orbe
-        const orbs = [];
-        
-        for (let i = 0; i < orbCount; i++) {
-            // Color aleatorio entre amarillo y verde claro
-            const hue = 0.15 + Math.random() * 0.1;
-            const orbColor = new THREE.Color().setHSL(hue, 0.8, 0.6);
-            
-            // Material con brillo (emissive)
-            const orbMaterial = new THREE.MeshPhongMaterial({
-                color: orbColor,
-                emissive: orbColor,
-                emissiveIntensity: 0.8,
-                transparent: true,
-                opacity: 0.7,
-                shininess: 80
-            });
-            
-            const orb = new THREE.Mesh(orbGeometry, orbMaterial);
-            
-            // Posicionar cerca de las flores
-            let positionSet = false;
-            if (STATE.flowers.length > 0 && Math.random() > 0.3) {
-                const randomFlower = STATE.flowers[Math.floor(Math.random() * STATE.flowers.length)];
-                
-                orb.position.set(
-                    randomFlower.position.x + (Math.random() - 0.5) * 5,
-                    randomFlower.position.y + 0.3 + Math.random() * 1.2,
-                    randomFlower.position.z + (Math.random() - 0.5) * 5
-                );
-                positionSet = true;
-            }
-            
-            // Si no se posicionó cerca de una flor o no hay flores
-            if (!positionSet) {
-                orb.position.set(
-                    (Math.random() - 0.5) * 30,
-                    0.5 + Math.random() * 2,
-                    (Math.random() - 0.5) * 30
-                );
-            }
-            
-            // Añadir luz puntual con radio pequeño a algunos orbes
-            if (Math.random() > 0.6) {
-                const pointLight = new THREE.PointLight(
-                    orbColor,
-                    0.4,  // intensidad
-                    1     // distancia
-                );
-                orb.add(pointLight);
-            }
-            
-            // Datos para animación
-            orb.userData = {
-                originalPosition: orb.position.clone(),
-                phase: Math.random() * Math.PI * 2,
-                speed: 0.01 + Math.random() * 0.03,
-                amplitude: 0.2 + Math.random() * 0.8,
-                pulseSpeed: 0.05 + Math.random() * 0.1,
-                originalScale: 1
-            };
-            
-            orbGroup.add(orb);
-            orbs.push(orb);
-        }
-        
-        orbGroup.userData = {
-            orbs: orbs
-        };
-        
-        return orbGroup;
-    }
     
-    // Añadir orbes de luz a la escena
-    const lightOrbs = createLightOrbs();
-    scene.add(lightOrbs);
-    
-    // Crear neblina flotante en zonas bajas - reducida y más esparcida
     function createGroundMist() {
         const mistGroup = new THREE.Group();
-        const mistPatchCount = 10; // Reducido de 15 a 10 parches
+        const mistPatchCount = 10;
         
         for (let i = 0; i < mistPatchCount; i++) {
-            // Crear un grupo para cada zona de niebla
             const mistPatch = new THREE.Group();
-            const particleCount = 3 + Math.floor(Math.random() * 5); // Reducido de 8-18 a 3-8 partículas
+            const particleCount = 3 + Math.floor(Math.random() * 5);
             
-            // Posición base para este parche de niebla - más dispersa
-            const baseX = (Math.random() - 0.5) * 80; // Ampliado de 40 a 80
-            const baseZ = (Math.random() - 0.5) * 80; // Ampliado de 40 a 80
+            const baseX = (Math.random() - 0.5) * 80;
+            const baseZ = (Math.random() - 0.5) * 80;
             const baseY = Math.sin(baseX * 0.5) * Math.cos(baseZ * 0.5) * 0.5 +
                           Math.sin(baseX * 0.2) * Math.cos(baseZ * 0.3) * 1;
             
-            // Material para la niebla con color más sutil
             const mistColor = new THREE.Color(0x5ab950).lerp(
                 new THREE.Color(0xd8eeff), 
                 0.9 + Math.random() * 0.1
             );
             
-            // Crear partículas de niebla más dispersas
             for (let j = 0; j < particleCount; j++) {
-                // Material con opacidad aún más baja
                 const individualMaterial = new THREE.MeshStandardMaterial({
                     color: mistColor,
                     transparent: true,
-                    opacity: 0.03 + Math.random() * 0.02, // Reducida aún más
+                    opacity: 0.03 + Math.random() * 0.02,
                     roughness: 1,
                     metalness: 0,
                     side: THREE.DoubleSide,
@@ -1249,36 +1047,32 @@ export function sceneInit(scene, loadingManager) {
                     blending: THREE.AdditiveBlending
                 });
                 
-                // Radio más pequeño para cada partícula
-                const radius = 1.5 + Math.random() * 2.5; // Reducido de 2-5 a 1.5-4
+                const radius = 1.5 + Math.random() * 2.5;
                 const mistParticle = new THREE.Mesh(
                     new THREE.SphereGeometry(radius, 
-                    Math.max(5, Math.floor(radius * 1.5)), // Reducida resolución
+                    Math.max(5, Math.floor(radius * 1.5)),
                     Math.max(3, Math.floor(radius * 0.75))),
                     individualMaterial
                 );
                 
-                // Distribuir partículas con mayor espaciado
                 const angle = (j / particleCount) * Math.PI * 2 + Math.random() * 0.7;
-                const distance = 5 + Math.random() * 12; // Ampliado de 3-10 a 5-17
+                const distance = 5 + Math.random() * 12;
                 
                 mistParticle.position.set(
                     baseX + Math.cos(angle) * distance,
-                    baseY + 0.01 + Math.random() * 0.06, // Aún más cercana al suelo
+                    baseY + 0.01 + Math.random() * 0.06,
                     baseZ + Math.sin(angle) * distance
                 );
                 
-                // Aplanar más la niebla
-                mistParticle.scale.y = 0.02 + Math.random() * 0.03; // Reducido de 0.03-0.08 a 0.02-0.05
+                mistParticle.scale.y = 0.02 + Math.random() * 0.03;
                 
-                // Datos para animación
                 mistParticle.userData = {
                     originalY: mistParticle.position.y,
-                    floatSpeed: 0.001 + Math.random() * 0.003, // Movimiento más lento
-                    floatHeight: 0.01 + Math.random() * 0.02, // Oscilación muy sutil
+                    floatSpeed: 0.001 + Math.random() * 0.003,
+                    floatHeight: 0.01 + Math.random() * 0.02,
                     phase: Math.random() * Math.PI * 2,
                     originalOpacity: mistParticle.material.opacity,
-                    opacitySpeed: 0.0002 + Math.random() * 0.0003 // Cambio más lento de opacidad
+                    opacitySpeed: 0.0002 + Math.random() * 0.0003
                 };
                 
                 mistPatch.add(mistParticle);
@@ -1290,13 +1084,10 @@ export function sceneInit(scene, loadingManager) {
         return mistGroup;
     }
     
-    // Añadir niebla a la escena
     const groundMist = createGroundMist();
     scene.add(groundMist);
 
-    // Animation controller
     const AnimationController = {
-        // Main animation loop
         animate: function() {
             STATE.time += 0.05;
             
@@ -1312,7 +1103,6 @@ export function sceneInit(scene, loadingManager) {
             requestAnimationFrame(() => this.animate());
         },
         
-        // Animate grass blades
         animateGrass: function() {
             const matrix = new THREE.Matrix4();
             const quaternion = new THREE.Quaternion();
@@ -1339,7 +1129,6 @@ export function sceneInit(scene, loadingManager) {
             instancedGrass.instanceMatrix.needsUpdate = true;
         },
         
-        // Animate flowers
         animateFlowers: function() {
             STATE.flowers.forEach((flower, index) => {
                 const windStrength = 0.05;
@@ -1349,33 +1138,28 @@ export function sceneInit(scene, loadingManager) {
             });
         },
         
-        // Animate trees
         animateTrees: function() {
             STATE.trees.forEach((tree) => {
                 const userData = tree.userData;
                 const windIntensity = Math.sin(STATE.time * 0.5 + userData.phase) * 0.02 * userData.windFactor;
                 
-                // Animar diferentes tipos de árboles
-                if (userData.type === 0) { // Árbol de pino
+                if (userData.type === 0) {
                     userData.pineCones.forEach((cone, index) => {
-                        const offsetFactor = (index + 1) / userData.pineCones.length; // Más movimiento en la parte superior
+                        const offsetFactor = (index + 1) / userData.pineCones.length;
                         cone.rotation.x = Math.sin(STATE.time * 0.3 + userData.phase) * 0.05 * offsetFactor * userData.windFactor;
                         cone.rotation.z = Math.sin(STATE.time * 0.4 + userData.phase) * 0.05 * offsetFactor * userData.windFactor;
                         
-                        // Movimiento más orgánico
                         cone.position.x = Math.sin(STATE.time * 0.2 + userData.phase + index) * 0.02 * offsetFactor * userData.windFactor;
                         cone.position.z = Math.cos(STATE.time * 0.2 + userData.phase + index) * 0.02 * offsetFactor * userData.windFactor;
                     });
-                } else if (userData.type === 1 || userData.type === 2) { // Árbol de roble o abedul
+                } else if (userData.type === 1 || userData.type === 2) {
                     userData.foliages.forEach((foliage, index) => {
-                        // Guardar posición original si no se ha guardado aún
                         if (!foliage.userData.originalPos) {
                             foliage.userData.originalPos = foliage.position.clone();
                         }
                         
                         const originalPos = foliage.userData.originalPos;
                         
-                        // Aplicar movimiento ondulante mejorado
                         foliage.position.x = originalPos.x + 
                             Math.sin(STATE.time * 0.5 + index) * 0.05 * userData.windFactor +
                             Math.sin(STATE.time * 0.23 + index * 0.3) * 0.02 * userData.windFactor;
@@ -1384,13 +1168,11 @@ export function sceneInit(scene, loadingManager) {
                             Math.sin(STATE.time * 0.4 + index * 0.7) * 0.05 * userData.windFactor +
                             Math.cos(STATE.time * 0.31 + index * 0.2) * 0.02 * userData.windFactor;
                         
-                        // Pequeñas rotaciones más orgánicas
                         foliage.rotation.x = Math.sin(STATE.time * 0.3 + userData.phase) * 0.06 * userData.windFactor;
                         foliage.rotation.z = Math.sin(STATE.time * 0.4 + userData.phase + index) * 0.06 * userData.windFactor;
                         foliage.rotation.y = Math.sin(STATE.time * 0.2 + userData.phase + index * 0.5) * 0.03 * userData.windFactor;
                     });
                     
-                    // Animar ramas también
                     userData.branches.forEach((branch, index) => {
                         branch.rotation.x += Math.sin(STATE.time * 0.3 + index) * 0.01 * userData.windFactor;
                         branch.rotation.z += Math.sin(STATE.time * 0.25 + index * 0.7) * 0.01 * userData.windFactor;
@@ -1399,57 +1181,49 @@ export function sceneInit(scene, loadingManager) {
             });
         },
         
-        // Animate birds
         animateBirds: function() {
             STATE.birds.forEach(bird => {
                 const userData = bird.userData;
                 
-                // Actualizar posición en patrón circular
                 userData.angle += userData.speed;
                 bird.position.x = Math.cos(userData.angle) * userData.radius;
                 bird.position.z = Math.sin(userData.angle) * userData.radius;
                 bird.position.y = userData.height + Math.sin(userData.angle * 2) * 0.5;
                 
-                // Orientar el pájaro en la dirección del movimiento
                 bird.rotation.y = userData.angle + Math.PI / 2;
                 
-                // Animar alas con patrón más natural de aleteo
                 const wingAngle = Math.sin(STATE.time * userData.wingSpeed * 10 + userData.flapPhase) * 0.5;
                 userData.leftWing.rotation.z = -Math.abs(wingAngle);
                 userData.rightWing.rotation.z = Math.abs(wingAngle);
                 
-                // Animar cola
                 userData.tail.rotation.z = Math.sin(STATE.time * 0.5 + userData.flapPhase) * 0.1;
             });
         },
         
-        // Animate clouds
         animateClouds: function() {
             STATE.clouds.forEach(cloud => {
                 const userData = cloud.userData;
                 
-                // Aplicar diferentes patrones de movimiento según el tipo de nube
                 switch(userData.cloudType) {
-                    case 0: // Nubes que se mueven principalmente horizontalmente
+                    case 0:
                         cloud.position.x += userData.direction.x * userData.speed;
                         cloud.position.z += userData.direction.z * userData.speed * 0.7;
-                        // Pequeña oscilación en altura
                         cloud.position.y = userData.initialPosition.y + Math.sin(STATE.time * 0.03) * 0.3;
                         break;
                         
-                    case 1: // Nubes que flotan con movimiento más aleatorio
+                    case 1:
                         cloud.position.x += userData.direction.x * userData.speed * (0.8 + Math.sin(STATE.time * 0.1) * 0.2);
                         cloud.position.z += userData.direction.z * userData.speed * (0.8 + Math.cos(STATE.time * 0.15) * 0.2);
                         cloud.position.y = userData.initialPosition.y + Math.sin(STATE.time * 0.04 + cloud.position.x * 0.01) * 0.5;
                         break;
                         
-                    case 2: // Nubes más estáticas con suave bamboleo
+                    case 2:
                         cloud.position.x += userData.direction.x * userData.speed * 0.3;
                         cloud.position.z += userData.direction.z * userData.speed * 0.3;
                         cloud.position.y = userData.initialPosition.y + Math.sin(STATE.time * 0.02 + cloud.position.z * 0.02) * 0.7;
                         break;
                         
-                    case 3: // Nubes que se expanden y contraen ligeramente
+                    case 3:
                         cloud.position.x += userData.direction.x * userData.speed * 0.6;
                         cloud.position.z += userData.direction.z * userData.speed * 0.6;
                         const pulse = 1 + Math.sin(STATE.time * userData.pulseSpeed) * userData.pulseAmount;
@@ -1457,7 +1231,7 @@ export function sceneInit(scene, loadingManager) {
                         cloud.scale.z = cloud.userData.originalScale * pulse;
                         break;
                         
-                    case 4: // Nubes con movimiento lento circular
+                    case 4:
                         const circleRadius = 3;
                         const circleSpeed = 0.005;
                         cloud.position.x = userData.initialPosition.x + Math.cos(STATE.time * circleSpeed) * circleRadius;
@@ -1466,106 +1240,82 @@ export function sceneInit(scene, loadingManager) {
                         break;
                 }
                 
-                // Rotación muy suave
                 cloud.rotation.y += userData.rotationSpeed * 0.5;
                 
-                // Si se alejan demasiado, reiniciar a posición opuesta
                 if (cloud.position.x > 80) cloud.position.x = -80;
                 if (cloud.position.x < -80) cloud.position.x = 80;
                 if (cloud.position.z > 80) cloud.position.z = -80;
                 if (cloud.position.z < -80) cloud.position.z = 80;
                 
-                // Establecer escala original si no existe
                 if (userData.cloudType === 3 && !userData.originalScale) {
                     userData.originalScale = cloud.scale.x;
                 }
             });
         },
         
-        // Animate butterflies
         animateButterflies: function() {
             STATE.butterflies.forEach(butterfly => {
                 const userData = butterfly.userData;
                 
-                // Solo mover si no está esperando
                 if (!userData.isWaiting) {
-                    // Vector de dirección hacia el objetivo
                     const direction = new THREE.Vector3().subVectors(
                         userData.targetPosition,
                         butterfly.position
                     );
                     
-                    // Normalizar y escalar por velocidad
                     direction.normalize();
                     direction.multiplyScalar(userData.speed);
                     
-                    // Mover hacia el objetivo
                     butterfly.position.add(direction);
                     
-                    // Orientar hacia la dirección de vuelo con suavidad
                     if (direction.length() > 0.01) {
-                        // Crear un punto adelante en la dirección de vuelo
                         const lookTarget = new THREE.Vector3().addVectors(
                             butterfly.position,
                             direction.clone().multiplyScalar(2)
                         );
                         
-                        // Ajustar altura del punto objetivo para inclinar la mariposa naturalmente
                         lookTarget.y += Math.sin(STATE.time * userData.bobSpeed) * 0.1;
                         
                         butterfly.lookAt(lookTarget);
                         
-                        // Añadir inclinación lateral en curvas
                         const turnFactor = Math.abs(direction.x) + Math.abs(direction.z);
                         butterfly.rotation.z = direction.x * 0.3 * turnFactor;
                         
-                        // Añadir balanceo natural
                         butterfly.position.y += Math.sin(STATE.time * userData.bobSpeed) * userData.bobAmount;
                     }
                     
-                    // Verificar si la mariposa llegó al objetivo
                     const distanceToTarget = butterfly.position.distanceTo(userData.targetPosition);
                     if (distanceToTarget < 0.2) {
-                        // Cambiar al siguiente punto de ruta
                         userData.currentTarget = (userData.currentTarget + 1) % userData.waypoints.length;
                         userData.targetPosition.copy(userData.waypoints[userData.currentTarget]);
                         
-                        // A veces esperar en un punto
                         if (Math.random() < 0.3) {
                             userData.isWaiting = true;
                             userData.waitTime = 0;
                         }
                     }
                     
-                    // Animar alas con patrón de aleteo más natural durante el vuelo
-                    const baseFlapSpeed = 10; // Velocidad base de aleteo
+                    const baseFlapSpeed = 10;
                     
-                    // Aleteo más rápido al acelerar, más lento al desacelerar
                     const speedFactor = direction.length() * 20;
                     const flapSpeed = baseFlapSpeed + speedFactor;
                     
-                    // Patrón de aleteo con pausas y aceleraciones
                     const flapPattern = Math.sin(STATE.time * userData.wingFlapSpeed * flapSpeed);
                     const wingAngle = Math.pow(Math.abs(flapPattern), 0.7) * Math.sign(flapPattern) * 0.9;
                     
-                    // Aplicar rotación a las alas completas
                     userData.leftWing.rotation.y = wingAngle;
                     userData.rightWing.rotation.y = -wingAngle;
                 } else {
-                    // Esperar un tiempo antes de continuar
                     userData.waitTime++;
                     
-                    // Aleteo ocasional y lento mientras espera
                     const restingFlapSpeed = 3;
                     const restingFlapAmount = 0.3;
                     
-                    // Aleteo ocasional mientras descansa
                     if (Math.sin(STATE.time * 2) > 0.7) {
                         const restingFlap = Math.sin(STATE.time * userData.wingFlapSpeed * restingFlapSpeed) * restingFlapAmount;
                         userData.leftWing.rotation.y = restingFlap;
                         userData.rightWing.rotation.y = -restingFlap;
                     } else {
-                        // Posición cerrada en reposo
                         userData.leftWing.rotation.y = 0.1;
                         userData.rightWing.rotation.y = -0.1;
                     }
@@ -1577,13 +1327,11 @@ export function sceneInit(scene, loadingManager) {
             });
         },
         
-        // Animate pollen particles
         animatePollenParticles: function() {
             const positions = pollenSystem.geometry.attributes.position.array;
             const velocities = pollenSystem.userData.velocities;
             const originalSizes = pollenSystem.userData.originalSizes;
             
-            // Hacer posiciones cada 30 frames para mejor rendimiento
             if (!pollenSystem.geometry.attributes.size) {
                 pollenSystem.geometry.setAttribute('size', new THREE.Float32BufferAttribute(new Float32Array(originalSizes.length), 1));
             }
@@ -1591,21 +1339,17 @@ export function sceneInit(scene, loadingManager) {
             const sizeAttribute = pollenSystem.geometry.attributes.size.array;
             
             for (let i = 0; i < positions.length / 3; i++) {
-                // Aplicar velocidad con movimiento más aleatorio
                 positions[i * 3] += velocities[i].x + Math.sin(STATE.time * 0.5 + i) * 0.003;
                 positions[i * 3 + 1] += velocities[i].y + Math.cos(STATE.time * 0.3 + i) * 0.003;
                 positions[i * 3 + 2] += velocities[i].z + Math.sin(STATE.time * 0.4 + i) * 0.003;
                 
-                // Pulse efecto de tamaño (crecer y disminuir suavemente)
                 const sizePulse = 0.8 + 0.2 * Math.sin(STATE.time * 0.2 + i * 0.1);
                 sizeAttribute[i] = originalSizes[i] * sizePulse;
                 
-                // Mantener las partículas a una altura mínima
                 if (positions[i * 3 + 1] < 0.2) {
                     velocities[i].y = Math.abs(velocities[i].y);
                 }
                 
-                // Mantener las partículas dentro de un rango
                 if (Math.abs(positions[i * 3]) > 25) velocities[i].x *= -1;
                 if (positions[i * 3 + 1] > 3) velocities[i].y *= -1;
                 if (Math.abs(positions[i * 3 + 2]) > 25) velocities[i].z *= -1;
@@ -1615,32 +1359,25 @@ export function sceneInit(scene, loadingManager) {
             pollenSystem.geometry.attributes.size.needsUpdate = true;
         },
         
-        // Animate ground mist
         animateMist: function() {
             groundMist.children.forEach(mistPatch => {
                 mistPatch.children.forEach(mistParticle => {
                     const userData = mistParticle.userData;
                     
-                    // Movimiento flotante muy sutil para la niebla
                     mistParticle.position.y = userData.originalY + 
                         Math.sin(STATE.time * userData.floatSpeed + userData.phase) * userData.floatHeight;
                     
-                    // Variación en la opacidad muy suave, manteniendo valores bajos
                     const opacityFactor = 0.85 + Math.sin(STATE.time * userData.opacitySpeed + userData.phase) * 0.15;
                     mistParticle.material.opacity = Math.min(0.1, userData.originalOpacity * opacityFactor);
                     
-                    // Muy leve dispersión horizontal
                     mistParticle.position.x += Math.sin(STATE.time * 0.005 + userData.phase) * 0.001;
                     mistParticle.position.z += Math.cos(STATE.time * 0.005 + userData.phase + Math.PI/4) * 0.001;
                     
-                    // Ajustar altura para seguir el terreno sutilmente
                     const newX = mistParticle.position.x;
                     const newZ = mistParticle.position.z;
                     
-                    // Calcular la altura del terreno
                     const terrainY = calculateTerrainHeight(newX, newZ);
                     
-                    // Interpolar muy suavemente hacia la altura del terreno
                     userData.originalY += (terrainY + 0.02 - userData.originalY) * 0.001;
                 });
             });
