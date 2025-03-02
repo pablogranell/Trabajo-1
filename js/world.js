@@ -3,13 +3,13 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 
 const CONFIG = {
     WORLD: {
-        SIZE: 50,
+        SIZE: 128,
         TERRAIN_SEGMENTS: 64,
         FOG_DENSITY: 0.005 + Math.random() * 0.02
     },
     
     COUNTS: {
-        GRASS_INSTANCES_MAX: 100000,
+        GRASS_INSTANCES_MAX: 200000,
         TREE_COUNT: 50,
         FLOWER_COUNT: 150,
         BIRD_COUNT: 10,
@@ -68,7 +68,7 @@ const CONFIG = {
     },
     
     LIGHTING: {
-        AMBIENT_LIGHT_INTENSITY: 0.4,
+        AMBIENT_LIGHT_INTENSITY: 0.5,
         SUN_LIGHT_INTENSITY: 10,
         SUN_LIGHT_COLOR: 0xfffaed,
         SKY_ANALYSIS: {
@@ -664,7 +664,6 @@ export function sceneInit(scene, loadingManager) {
     ground.userData.type = 'ground';
     scene.add(ground);
 
-    // Seleccionar aleatoriamente uno de los skyboxes disponibles
     const skyboxNumber = Math.floor(Math.random() * 13) + 1; // Número aleatorio entre 1 y 13
     const skyboxPath = `modelos/Cielos/sky${skyboxNumber}.png`;
     console.log(`Cargando skybox: ${skyboxPath}`);
@@ -767,30 +766,26 @@ export function sceneInit(scene, loadingManager) {
     let instanceCount = 0;
     
     for (let i = 0; i < CONFIG.COUNTS.GRASS_INSTANCES_MAX; i++) {
-        const x = (Math.random() - 0.5) * 40;
-        const z = (Math.random() - 0.5) * 40;
-        const distance = Math.sqrt(x * x + z * z);
+        const x = (Math.random() - 0.5) * CONFIG.WORLD.SIZE;
+        const z = (Math.random() - 0.5) * CONFIG.WORLD.SIZE;
+        const angle = Math.random() * Math.PI;
+        const y = Math.sin(x * 0.5) * Math.cos(z * 0.5) * 0.5 +
+                    Math.sin(x * 0.2) * Math.cos(z * 0.3) * 1;
         
-        if (Math.random() < (1 - distance / 40)) {
-            const angle = Math.random() * Math.PI;
-            const y = Math.sin(x * 0.5) * Math.cos(z * 0.5) * 0.5 +
-                     Math.sin(x * 0.2) * Math.cos(z * 0.3) * 1;
-            
-            const scale = 1 + Math.random() * 0.5;
-            
-            matrix.makeRotationY(angle);
-            matrix.scale(new THREE.Vector3(scale, 1, scale));
-            matrix.setPosition(x, y, z);
-            
-            instancedGrass.setMatrixAt(instanceCount, matrix);
-            STATE.grassInstances.push({
-                position: new THREE.Vector3(x, y, z),
-                baseRotation: angle,
-                scale: scale
-            });
-            
-            instanceCount++;
-        }
+        const scale = 1 + Math.random() * 0.5;
+        
+        matrix.makeRotationY(angle);
+        matrix.scale(new THREE.Vector3(scale, 1, scale));
+        matrix.setPosition(x, y, z);
+        
+        instancedGrass.setMatrixAt(instanceCount, matrix);
+        STATE.grassInstances.push({
+            position: new THREE.Vector3(x, y, z),
+            baseRotation: angle,
+            scale: scale
+        });
+        
+        instanceCount++;
     }
     instancedGrass.count = instanceCount;
     instancedGrass.instanceMatrix.needsUpdate = true;
