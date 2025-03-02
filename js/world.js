@@ -3,23 +3,22 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 
 const CONFIG = {
     WORLD: {
-        SIZE: 128,
+        SIZE: 50,
         TERRAIN_SEGMENTS: 64,
         FOG_DENSITY: 0.005 + Math.random() * 0.02
     },
     
     COUNTS: {
-        GRASS_INSTANCES_MAX: 200000,
+        GRASS_INSTANCES_MAX: 100000,
         TREE_COUNT: 50,
         FLOWER_COUNT: 150,
         BIRD_COUNT: 10,
         BUTTERFLY_COUNT: 10,
-        CLOUD_COUNT: 50 + Math.floor(Math.random() * 91),
+        CLOUD_COUNT: 100,
     },
     
     COLORS: {
         GROUND_COLOR: (() => {
-            // Array de colores de suelo naturales
             const groundColors = [
                 0x5ab950, // Verde claro
                 0x4a8e3f, // Verde oscuro
@@ -45,11 +44,11 @@ const CONFIG = {
     },
     
     POSITIONS: {
-        TREE_SPAWN_RADIUS: 40,
+        TREE_SPAWN_RADIUS: 50,
         BENCH_POSITION: new THREE.Vector3(-5, 0.3, 5),
         BENCH_INTERACTION_RADIUS: 2,
         MIN_TREE_DISTANCE_FROM_BENCH: 3,
-        FLOWER_SPAWN_RADIUS: 40,
+        FLOWER_SPAWN_RADIUS: 50,
         CLOUD_SPAWN_RADIUS: 500,
         CLOUD_HEIGHT_MIN: 200,
         CLOUD_HEIGHT_MAX: 500,
@@ -68,7 +67,7 @@ const CONFIG = {
     },
     
     LIGHTING: {
-        AMBIENT_LIGHT_INTENSITY: 0.5,
+        AMBIENT_LIGHT_INTENSITY: 1,
         SUN_LIGHT_INTENSITY: 10,
         SUN_LIGHT_COLOR: 0xfffaed,
         SKY_ANALYSIS: {
@@ -93,12 +92,6 @@ const STATE = {
         lastUpdateTime: 0
     }
 };
-
-
-function calculateTerrainHeight(x, z) {
-    return Math.sin(x * 0.5) * Math.cos(z * 0.5) * 0.5 +
-           Math.sin(x * 0.2) * Math.cos(z * 0.3) * 1;
-}
 
 function analyzeSkyTexture(texture, options = {}) {
     if (!texture || !texture.image) return null;
@@ -220,76 +213,57 @@ function updateLightingFromSky(scene, sunLight, ambientLight, skyAnalysis) {
         scene.fog.color.copy(skyAnalysis.skyColor);
     }
     
-    // Actualizar colores del terreno y césped basados en el color del cielo
     updateEnvironmentColors(scene, skyAnalysis);
 }
 
-// Nueva función para actualizar los colores del ambiente
 function updateEnvironmentColors(scene, skyAnalysis) {
     if (!skyAnalysis) return;
     
-    // Obtener el color del cielo y ajustarlo para el terreno
     const skyColor = skyAnalysis.skyColor;
     
-    // Crear un color para el terreno basado en el color del cielo
     const groundColor = new THREE.Color();
     groundColor.copy(skyColor);
     
-    // Ajustar el color del terreno para que sea más natural
-    // Aumentar el componente verde y reducir el azul para terreno
     groundColor.r = Math.max(0.2, Math.min(0.8, groundColor.r * 0.8));
     groundColor.g = Math.max(0.3, Math.min(0.9, groundColor.g * 1.2));
     groundColor.b = Math.max(0.1, Math.min(0.7, groundColor.b * 0.6));
     
-    // Crear un color para el césped basado en el color del cielo
     const grassColor = new THREE.Color();
     grassColor.copy(skyColor);
     
-    // Ajustar el color del césped para que sea más verde
     grassColor.r = Math.max(0.1, Math.min(0.6, grassColor.r * 0.5));
     grassColor.g = Math.max(0.4, Math.min(1.0, grassColor.g * 1.5));
     grassColor.b = Math.max(0.1, Math.min(0.5, grassColor.b * 0.4));
     
-    // Crear un color para las flores basado en el color del cielo
     const flowerColor = new THREE.Color();
     flowerColor.copy(skyColor);
     
-    // Hacer que las flores tengan colores más vibrantes
     flowerColor.r = Math.max(0.5, Math.min(1.0, flowerColor.r * 1.5));
     flowerColor.g = Math.max(0.3, Math.min(0.9, flowerColor.g * 0.9));
     flowerColor.b = Math.max(0.4, Math.min(1.0, flowerColor.b * 1.2));
     
-    // Crear un color para las hojas de los árboles basado en el color del cielo
     const leafColor = new THREE.Color();
     leafColor.copy(skyColor);
     
-    // Ajustar el color de las hojas para que sea más verde
     leafColor.r = Math.max(0.1, Math.min(0.5, leafColor.r * 0.4));
     leafColor.g = Math.max(0.3, Math.min(0.9, leafColor.g * 1.3));
     leafColor.b = Math.max(0.1, Math.min(0.4, leafColor.b * 0.3));
     
-    // Actualizar los colores en la configuración
     CONFIG.COLORS.GROUND_COLOR = groundColor.getHex();
     CONFIG.COLORS.GRASS_COLOR = grassColor.getHex();
-    console.log("ddeddd")
-    // Actualizar materiales existentes en la escena
     scene.traverse((object) => {
         if (object.isMesh) {
-            // Actualizar el material del terreno
             if (object.name === 'ground' && object.material) {
                 object.material.color.copy(groundColor);
                 object.material.needsUpdate = true;
             }
             
-            // Actualizar el material del césped (instanced mesh)
             if (object.isInstancedMesh && object.userData.type === 'grass') {
                 object.material.color.copy(grassColor);
                 object.material.needsUpdate = true;
             }
             
-            // Actualizar colores de las flores
             if (object.userData.type === 'flower') {
-                // Variar ligeramente el color para cada flor
                 const hue = (flowerColor.getHSL({}).h + Math.random() * 0.2 - 0.1) % 1;
                 const saturation = Math.min(1, flowerColor.getHSL({}).s * (0.8 + Math.random() * 0.4));
                 const lightness = Math.min(0.8, flowerColor.getHSL({}).l * (0.8 + Math.random() * 0.4));
@@ -298,13 +272,11 @@ function updateEnvironmentColors(scene, skyAnalysis) {
                 object.material.needsUpdate = true;
             }
             
-            // Actualizar colores de las hojas de los árboles
             if (object.userData.type === 'leaf') {
                 object.material.color.copy(leafColor);
                 object.material.needsUpdate = true;
             }
             
-            // Actualizar la niebla del suelo para que coincida con el ambiente
             if (object.userData.type === 'groundMist') {
                 const mistColor = new THREE.Color();
                 mistColor.copy(skyColor);
@@ -450,7 +422,7 @@ function createTree(type = Math.floor(Math.random() * 3)) {
             break;
 
         case 2:
-            const birchTrunkHeight = 3.5 + Math.random() * 0.5;
+            const birchTrunkHeight = 4 + Math.random() * 0.5;
             const birchTrunk = new THREE.Mesh(
                 new THREE.CylinderGeometry(0.15, 0.25, birchTrunkHeight, 8),
                 new THREE.MeshStandardMaterial({ 
@@ -697,7 +669,7 @@ export function sceneInit(scene, loadingManager) {
 
     const fbxLoader = new FBXLoader(loadingManager.getManager());
     fbxLoader.load('modelos/3D/stone_bench_01_m13.fbx', (bench) => {
-        bench.scale.set(1, 1.5, 1);
+        bench.scale.set(0.8, 1.2, 0.8);
         bench.position.copy(CONFIG.POSITIONS.BENCH_POSITION);
         
         bench.traverse((child) => {
@@ -770,7 +742,7 @@ export function sceneInit(scene, loadingManager) {
         const z = (Math.random() - 0.5) * CONFIG.WORLD.SIZE;
         const angle = Math.random() * Math.PI;
         const y = Math.sin(x * 0.5) * Math.cos(z * 0.5) * 0.5 +
-                    Math.sin(x * 0.2) * Math.cos(z * 0.3) * 1;
+                    Math.sin(x * 0.2) * Math.cos(z * 0.3);
         
         const scale = 1 + Math.random() * 0.5;
         
@@ -839,7 +811,6 @@ export function sceneInit(scene, loadingManager) {
     
     scene.add(sunLight);
     
-    if (!window.mainScene) window.mainScene = {};
     window.mainScene.sunLight = sunLight;
     window.mainScene.ambientLight = ambientLight;
     
@@ -1356,17 +1327,15 @@ export function sceneInit(scene, loadingManager) {
         
         animateFlowers: function() {
             STATE.flowers.forEach((flower, index) => {
-                const windStrength = 0.05;
                 flower.rotation.y = Math.sin(STATE.time * 0.5 + index) * 0.2;
-                flower.rotation.z = Math.sin(STATE.time + flower.position.x * 0.1) * windStrength;
-                flower.rotation.x = Math.sin(STATE.time * 0.7 + flower.position.z * 0.1) * (windStrength * 0.7);
+                flower.rotation.z = Math.sin(STATE.time + flower.position.x * 0.1) * CONFIG.ANIMATION.WIND_STRENGTH;
+                flower.rotation.x = Math.sin(STATE.time * 0.7 + flower.position.z * 0.1) * (CONFIG.ANIMATION.WIND_STRENGTH * 0.7);
             });
         },
         
         animateTrees: function() {
             STATE.trees.forEach((tree) => {
                 const userData = tree.userData;
-                const windIntensity = Math.sin(STATE.time * 0.5 + userData.phase) * 0.02 * userData.windFactor;
                 
                 if (userData.type === 0) {
                     userData.pineCones.forEach((cone, index) => {
@@ -1411,8 +1380,8 @@ export function sceneInit(scene, loadingManager) {
                 const userData = bird.userData;
                 
                 userData.angle += userData.speed;
-                bird.position.x = Math.cos(userData.angle) * userData.radius;
-                bird.position.z = Math.sin(userData.angle) * userData.radius;
+                bird.position.x = Math.cos(userData.angle) * userData.radius * 3.5;
+                bird.position.z = Math.sin(userData.angle) * userData.radius * 3.5;
                 bird.position.y = userData.height + Math.sin(userData.angle * 2) * 0.5;
                 
                 bird.rotation.y = userData.angle + Math.PI / 2;
