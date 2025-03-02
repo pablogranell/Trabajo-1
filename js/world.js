@@ -5,19 +5,16 @@ const CONFIG = {
     WORLD: {
         SIZE: 50,
         TERRAIN_SEGMENTS: 64,
-        FOG_DENSITY: 0.015
+        FOG_DENSITY: 0.05
     },
     
     COUNTS: {
         GRASS_INSTANCES_MAX: 100000,
-        TREE_COUNT: 25,
+        TREE_COUNT: 50,
         FLOWER_COUNT: 150,
-        BIRD_COUNT: 7,
+        BIRD_COUNT: 10,
         BUTTERFLY_COUNT: 10,
         CLOUD_COUNT: 60,
-        LIGHT_ORB_COUNT: 30,
-        MIST_PATCH_COUNT: 10,
-        POLLEN_PARTICLE_COUNT: 400
     },
     
     COLORS: {
@@ -28,36 +25,34 @@ const CONFIG = {
     },
     
     POSITIONS: {
-        TREE_SPAWN_RADIUS: 30,
+        TREE_SPAWN_RADIUS: 40,
         BENCH_POSITION: new THREE.Vector3(-5, 0.3, 5),
         BENCH_INTERACTION_RADIUS: 2,
-        MIN_TREE_DISTANCE_FROM_BENCH: 2,
+        MIN_TREE_DISTANCE_FROM_BENCH: 3,
         FLOWER_SPAWN_RADIUS: 40,
         CLOUD_SPAWN_RADIUS: 120,
-        CLOUD_HEIGHT_MIN: 15,
-        CLOUD_HEIGHT_MAX: 55,
+        CLOUD_HEIGHT_MIN: 10,
+        CLOUD_HEIGHT_MAX: 70,
         SUN_POSITION: { phi: Math.PI * 0.25, theta: Math.PI * 0.1 }
     },
     
     ANIMATION: {
         WIND_STRENGTH: 0.05,
-        BASE_WING_FLAP_SPEED: 10,
         SKYBOX_ROTATION_SPEED: 0.0005,
         CLOUD_MOVEMENT_SPEED_MIN: 0.002,
-        CLOUD_MOVEMENT_SPEED_MAX: 0.01,
-        BIRD_SPEED_MIN: 0.02,
-        BIRD_SPEED_MAX: 0.05,
-        BUTTERFLY_SPEED_MIN: 0.02,
+        CLOUD_MOVEMENT_SPEED_MAX: 0.02,
+        BIRD_SPEED_MIN: 0.01,
+        BIRD_SPEED_MAX: 0.04,
+        BUTTERFLY_SPEED_MIN: 0.01,
         BUTTERFLY_SPEED_MAX: 0.05
     },
     
     LIGHTING: {
-        AMBIENT_LIGHT_INTENSITY: 0.65,
-        SUN_LIGHT_INTENSITY: 1.2,
+        AMBIENT_LIGHT_INTENSITY: 0.4,
+        SUN_LIGHT_INTENSITY: 5,
         SUN_LIGHT_COLOR: 0xfffaed,
         SKY_ANALYSIS: {
             ENABLED: true,
-            UPDATE_INTERVAL: 5000,
             SAMPLE_SIZE: 16,
             SUN_SEARCH_RADIUS: 0.2
         }
@@ -188,8 +183,8 @@ function updateLightingFromSky(scene, sunLight, ambientLight, skyAnalysis) {
                      0.114 * skyAnalysis.dominantColor.b;
     
     const normalizedLuminance = luminance / 255;
-    const minIntensity = 0.8;
-    const maxIntensity = 1.4; 
+    const minIntensity = 0.5;
+    const maxIntensity = 1.5; 
     sunLight.intensity = minIntensity + normalizedLuminance * (maxIntensity - minIntensity);
     
     const distance = 50;
@@ -535,7 +530,12 @@ export function sceneInit(scene, loadingManager) {
     ground.receiveShadow = true;
     scene.add(ground);
 
-    const skyTexture = loadingManager.textureLoader.load('modelos/Cielos/sky.png', (texture) => {
+    // Seleccionar aleatoriamente uno de los skyboxes disponibles
+    const skyboxNumber = Math.floor(Math.random() * 13) + 1; // Número aleatorio entre 1 y 13
+    const skyboxPath = `modelos/Cielos/sky${skyboxNumber}.png`;
+    console.log(`Cargando skybox: ${skyboxPath}`);
+
+    const skyTexture = loadingManager.textureLoader.load(skyboxPath, (texture) => {
         texture.mapping = THREE.EquirectangularReflectionMapping;
         texture.encoding = THREE.LinearEncoding;
         texture.wrapS = THREE.RepeatWrapping;
@@ -563,7 +563,7 @@ export function sceneInit(scene, loadingManager) {
     });
 
     scene.background = skyTexture;
-    scene.fog = new THREE.FogExp2(0x87ceeb, CONFIG.WORLD.FOG_DENSITY);
+    scene.fog = new THREE.FogExp2(CONFIG.COLORS.FOG_COLOR, CONFIG.WORLD.FOG_DENSITY);
 
     const fbxLoader = new FBXLoader(loadingManager.getManager());
     fbxLoader.load('modelos/3D/stone_bench_01_m13.fbx', (bench) => {
@@ -1274,7 +1274,6 @@ export function sceneInit(scene, loadingManager) {
             this.animateButterflies();
             this.animatePollenParticles();
             this.animateMist();
-            this.updateSkyLighting();
             
             requestAnimationFrame(() => this.animate());
         },
@@ -1557,43 +1556,6 @@ export function sceneInit(scene, loadingManager) {
                     userData.originalY += (terrainY + 0.02 - userData.originalY) * 0.001;
                 });
             });
-        },
-        
-        updateSkyLighting: function() {
-            if (!CONFIG.LIGHTING.SKY_ANALYSIS.ENABLED) return;
-            
-            const currentTime = performance.now();
-            if (currentTime - STATE.skyAnalysis.lastUpdateTime < CONFIG.LIGHTING.SKY_ANALYSIS.UPDATE_INTERVAL) {
-                return;
-            }
-            
-            STATE.skyAnalysis.lastUpdateTime = currentTime;
-            
-            if (!window.mainScene || !window.mainScene.sunLight || !window.mainScene.ambientLight) {
-                return;
-            }
-            
-            const scene = window.mainScene.sunLight.parent;
-            if (!scene) return;
-            
-            const sunLight = window.mainScene.sunLight;
-            const ambientLight = window.mainScene.ambientLight;
-            
-            if (STATE.skyAnalysis.dominantColor) {
-                const skyAnalysis = {
-                    dominantColor: STATE.skyAnalysis.dominantColor,
-                    skyColor: scene.fog ? scene.fog.color : new THREE.Color(0x87ceeb),
-                    sunDirection: STATE.skyAnalysis.sunPosition.clone().normalize()
-                };
-                
-                sunLight.position.copy(STATE.skyAnalysis.sunPosition);
-                sunLight.lookAt(0, 0, 0);
-            }
-            
-            if (scene.background && scene.background.isTexture && CONFIG.ANIMATION.SKYBOX_ROTATION_SPEED !== 0) {
-                scene.background.offset.x += CONFIG.ANIMATION.SKYBOX_ROTATION_SPEED;
-                scene.background.needsUpdate = true;
-            }
         }
     };
 
