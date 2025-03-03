@@ -1380,8 +1380,8 @@ export function sceneInit(scene, loadingManager) {
                 const userData = bird.userData;
                 
                 userData.angle += userData.speed;
-                bird.position.x = Math.cos(userData.angle) * userData.radius * 3.5;
-                bird.position.z = Math.sin(userData.angle) * userData.radius * 3.5;
+                bird.position.x = Math.cos(userData.angle) * userData.radius * 3;
+                bird.position.z = Math.sin(userData.angle) * userData.radius * 3;
                 bird.position.y = userData.height + Math.sin(userData.angle * 2) * 0.5;
                 
                 bird.rotation.y = userData.angle + Math.PI / 2;
