@@ -61,8 +61,8 @@ const CONFIG = {
         SKYBOX_ROTATION_SPEED: 0.0005,
         CLOUD_MOVEMENT_SPEED_MIN: 0.002,
         CLOUD_MOVEMENT_SPEED_MAX: 0.02,
-        BIRD_SPEED_MIN: 0.01,
-        BIRD_SPEED_MAX: 0.04,
+        BIRD_SPEED_MIN: 0.005,
+        BIRD_SPEED_MAX: 0.02,
         BUTTERFLY_SPEED_MIN: 0.01,
         BUTTERFLY_SPEED_MAX: 0.05
     },
@@ -91,6 +91,12 @@ const STATE = {
         dominantColor: new THREE.Color(CONFIG.LIGHTING.SUN_LIGHT_COLOR),
         sunPosition: new THREE.Vector3(5, 10, 5),
         lastUpdateTime: 0
+    },
+    fpsCounter: {
+        enabled: false,
+        frames: 0,
+        lastTime: performance.now(),
+        element: null
     }
 };
 
@@ -576,10 +582,47 @@ function createFlower(type = Math.floor(Math.random() * 3)) {
     return group;
 }
 
+function createFPSCounter() {
+    const fpsDiv = document.createElement('div');
+    fpsDiv.id = 'fps-counter';
+    fpsDiv.style.position = 'fixed';
+    fpsDiv.style.top = '10px';
+    fpsDiv.style.left = '10px';
+    fpsDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    fpsDiv.style.color = 'white';
+    fpsDiv.style.padding = '5px 10px';
+    fpsDiv.style.borderRadius = '5px';
+    fpsDiv.style.fontFamily = 'Arial, sans-serif';
+    fpsDiv.style.fontSize = '14px';
+    fpsDiv.style.display = 'none';
+    document.body.appendChild(fpsDiv);
+    return fpsDiv;
+}
+
+export function toggleFPSCounter() {
+    STATE.fpsCounter.enabled = !STATE.fpsCounter.enabled;
+    if (!STATE.fpsCounter.element) {
+        STATE.fpsCounter.element = createFPSCounter();
+    }
+    STATE.fpsCounter.element.style.display = STATE.fpsCounter.enabled ? 'block' : 'none';
+    STATE.fpsCounter.lastTime = performance.now();
+    STATE.fpsCounter.frames = 0;
+}
+
 export function sceneInit(scene, loadingManager) {
     const size = CONFIG.WORLD.SIZE;
     const segments = CONFIG.WORLD.TERRAIN_SEGMENTS;
     const halfSize = size / 2;
+    
+    // Initialize FPS counter and keyboard controls
+    if (!STATE.fpsCounter.element) {
+        STATE.fpsCounter.element = createFPSCounter();
+        document.addEventListener('keydown', (event) => {
+            if (event.key.toLowerCase() === 'f') {
+                toggleFPSCounter();
+            }
+        });
+    }
     
     const vertices = [];
     const indices = [];
@@ -1277,6 +1320,22 @@ export function sceneInit(scene, loadingManager) {
     const AnimationController = {
         animate: function() {
             STATE.time += 0.05;
+            
+            // FPS Counter update
+            if (STATE.fpsCounter.enabled) {
+                STATE.fpsCounter.frames++;
+                const currentTime = performance.now();
+                const elapsedTime = currentTime - STATE.fpsCounter.lastTime;
+                
+                if (elapsedTime >= 1000) {
+                    const fps = Math.round((STATE.fpsCounter.frames * 1000) / elapsedTime);
+                    if (STATE.fpsCounter.element) {
+                        STATE.fpsCounter.element.textContent = `FPS: ${fps}`;
+                    }
+                    STATE.fpsCounter.frames = 0;
+                    STATE.fpsCounter.lastTime = currentTime;
+                }
+            }
             
             this.animateGrass();
             this.animateFlowers();
