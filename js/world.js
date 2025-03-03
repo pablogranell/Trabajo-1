@@ -67,7 +67,7 @@ const CONFIG = {
     },
     
     LIGHTING: {
-        AMBIENT_LIGHT_INTENSITY: 1,
+        AMBIENT_LIGHT_INTENSITY: 0.6,
         SUN_LIGHT_INTENSITY: 10,
         SUN_LIGHT_COLOR: 0xfffaed,
         SKY_ANALYSIS: {
@@ -274,17 +274,6 @@ function updateEnvironmentColors(scene, skyAnalysis) {
             
             if (object.userData.type === 'leaf') {
                 object.material.color.copy(leafColor);
-                object.material.needsUpdate = true;
-            }
-            
-            if (object.userData.type === 'groundMist') {
-                const mistColor = new THREE.Color();
-                mistColor.copy(skyColor);
-                mistColor.r = Math.min(1, mistColor.r * 1.2);
-                mistColor.g = Math.min(1, mistColor.g * 1.2);
-                mistColor.b = Math.min(1, mistColor.b * 1.2);
-                
-                object.material.color.copy(mistColor);
                 object.material.needsUpdate = true;
             }
         }
@@ -1258,7 +1247,7 @@ export function sceneInit(scene, loadingManager) {
         const texture = new THREE.CanvasTexture(canvas);
         
         const particlesMaterial = new THREE.PointsMaterial({
-            color: 0xffff00,
+            color: new THREE.Color().setHSL(Math.random(), Math.random(), Math.random()),
             size: 0.075,
             map: texture,
             transparent: true,
