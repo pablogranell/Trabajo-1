@@ -15,6 +15,7 @@ const CONFIG = {
         BIRD_COUNT: 10,
         BUTTERFLY_COUNT: 10,
         CLOUD_COUNT: 100,
+        POLLEN_PARTICLES_COUNT: 1000
     },
     
     COLORS: {
@@ -52,7 +53,7 @@ const CONFIG = {
         CLOUD_SPAWN_RADIUS: 500,
         CLOUD_HEIGHT_MIN: 200,
         CLOUD_HEIGHT_MAX: 500,
-        SUN_POSITION: { phi: Math.PI * 0.25, theta: Math.PI * 0.1 }
+        SUN_POSITION: { phi: Math.PI * 0.1, theta: Math.PI * 0.1 }
     },
     
     ANIMATION: {
@@ -67,13 +68,13 @@ const CONFIG = {
     },
     
     LIGHTING: {
-        AMBIENT_LIGHT_INTENSITY: 0.6,
-        SUN_LIGHT_INTENSITY: 10,
+        AMBIENT_LIGHT_INTENSITY: 0.8,
+        SUN_LIGHT_INTENSITY: 100,
         SUN_LIGHT_COLOR: 0xfffaed,
         SKY_ANALYSIS: {
             ENABLED: true,
-            SAMPLE_SIZE: 16,
-            SUN_SEARCH_RADIUS: 0.2
+            SAMPLE_SIZE: 128,
+            SUN_SEARCH_RADIUS: 0.1
         }
     }
 };
@@ -281,7 +282,7 @@ function updateEnvironmentColors(scene, skyAnalysis) {
 }
 
 function createGrassBlade() {
-    const height = 0.3 + Math.random() * 0.7;
+    const height = 0.5 + Math.random() * 0.5;
     const baseWidth = 0.06 + Math.random() * 0.06;
     const shape = new THREE.Shape();
     
@@ -766,7 +767,7 @@ export function sceneInit(scene, loadingManager) {
         
         const tree = createTree();
         const y = Math.sin(x * 0.5) * Math.cos(z * 0.5) * 0.5 +
-                 Math.sin(x * 0.2) * Math.cos(z * 0.3) * 1;
+                 Math.sin(x * 0.2) * Math.cos(z * 0.3);
         
         tree.position.set(x, y, z);
         
@@ -782,7 +783,7 @@ export function sceneInit(scene, loadingManager) {
         const x = (Math.random() - 0.5) * CONFIG.POSITIONS.FLOWER_SPAWN_RADIUS;
         const z = (Math.random() - 0.5) * CONFIG.POSITIONS.FLOWER_SPAWN_RADIUS;
         const y = Math.sin(x * 0.5) * Math.cos(z * 0.5) * 0.5 +
-                 Math.sin(x * 0.2) * Math.cos(z * 0.3) * 1;
+                 Math.sin(x * 0.2) * Math.cos(z * 0.3);
         
         const flower = createFlower();
         flower.position.set(x, y, z);
@@ -1188,7 +1189,7 @@ export function sceneInit(scene, loadingManager) {
     
     function createPollenParticles() {
         const particlesGeometry = new THREE.BufferGeometry();
-        const particleCount = 400;
+        const particleCount = CONFIG.COUNTS.POLLEN_PARTICLES_COUNT;
         
         const positions = new Float32Array(particleCount * 3);
         const velocities = [];
