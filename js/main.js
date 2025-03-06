@@ -37,6 +37,8 @@ class Scene {
         this.prevTime = performance.now();
         this.camera.position.y = 1.6; // Altura de la camara, mas o menos
         this.isPaused = false;
+        this.blurAmount = 5; // Valor inicial del blur
+        this.showingControls = true; // Estado de visibilidad de los controles
         
         // Variables para el banco
         this.isSitting = false;
@@ -50,7 +52,7 @@ class Scene {
         this.controls = new PointerLockControls(this.camera, document.body);
         //Contenedor de la escena
         const sceneContainer = document.getElementById('scene-container');
-        sceneContainer.style.filter = 'blur(5px)';
+        sceneContainer.style.filter = `blur(${this.blurAmount}px)`;
         sceneContainer.style.transition = 'filter 1.2s';
 
         // Get references to the HTML elements
@@ -71,13 +73,18 @@ class Scene {
         });
         //Boton para parar el juego
         this.controls.addEventListener('unlock', () => {
-            sceneContainer.style.filter = 'blur(5px)';
+            sceneContainer.style.filter = `blur(${this.blurAmount}px)`;
             startContainer.style.opacity = '0';
             startContainer.style.display = 'flex';
-            setTimeout(() => {
+            if (this.showingControls) {
+                setTimeout(() => {
+                    startContainer.style.opacity = '1';
+                }, 1000);
+            } else {
                 startContainer.style.opacity = '1';
-            }, 1000);
+            }
             this.isPaused = true;
+            this.showingControls = true; // Siempre mostrar controles al pausar
             //Para que el jugador no se mueva
             this.velocity.set(0, 0, 0);
             this.moveForward = this.moveBackward = this.moveLeft = this.moveRight = false;
@@ -105,6 +112,39 @@ class Scene {
         });
         // Movimiento del jugador
         const onKeyDown = (event) => {
+            // Permitir teclas P, K, L incluso cuando el juego está pausado o en pantalla inicial
+            if (event.code === 'KeyP' || event.code === 'KeyK' || event.code === 'KeyL') {
+                switch (event.code) {
+                    case 'KeyP':
+                        // Toggle visibilidad de controles
+                        const startContainer = document.getElementById('start-container');
+                        this.showingControls = !this.showingControls;
+                        if (this.isPaused || !this.controls.isLocked) {
+                            startContainer.style.display = this.showingControls ? 'flex' : 'none';
+                            if (this.showingControls) {
+                                startContainer.style.opacity = '1';
+                            }
+                        }
+                        break;
+                    case 'KeyK':
+                        // Disminuir blur
+                        this.blurAmount = Math.max(0, this.blurAmount - 1);
+                        if (this.isPaused || !this.controls.isLocked) {
+                            document.getElementById('scene-container').style.filter = `blur(${this.blurAmount}px)`;
+                        }
+                        break;
+                    case 'KeyL':
+                        // Aumentar blur
+                        this.blurAmount = Math.min(20, this.blurAmount + 1);
+                        if (this.isPaused || !this.controls.isLocked) {
+                            document.getElementById('scene-container').style.filter = `blur(${this.blurAmount}px)`;
+                        }
+                        break;
+                }
+                return;
+            }
+
+            // Para el resto de teclas, no procesar si está pausado
             if (this.isPaused) return;
             
             switch (event.code) {
