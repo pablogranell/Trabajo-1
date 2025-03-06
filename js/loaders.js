@@ -9,7 +9,6 @@ export class LoadingManager {
         this.loadingPercentage = document.getElementById('loading-percentage');
         this.isLoading = true;
         this.setupLoadingManager();
-        this.preloadTextures();
     }
 
     setupLoadingManager() {
@@ -39,16 +38,4 @@ export class LoadingManager {
     getManager() {
         return this.manager;
     }
-
-    preloadTextures() {
-        // Cargar texturas en la pantalla de carga
-        for(let i = 0; i < 200; i++) {
-            this.textureLoader.load('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAwAEAAAIBRAA7');
-            this.textureLoader.load('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAAdBAAEAAAIBRAA7');
-            this.textureLoader.load('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBrRAA7');
-            this.textureLoader.load('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAArIBRAA7');
-            this.textureLoader.load('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAw2AAIBRAA7');
-            this.textureLoader.load('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRArA7');
-        }
-    }  
 }

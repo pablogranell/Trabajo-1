@@ -39,6 +39,8 @@ export function update(scene) {
 }
 
 function checkBenchProximity(scene) {
+    // No causa problemas pero quita los errores
+    if (!scene.bench) return;
     const playerPos = scene.camera.position;
     const benchPos = scene.benchInteractionSphere.position;
     const distanceSquared = Math.pow(playerPos.x - benchPos.x, 2) + Math.pow(playerPos.z - benchPos.z, 2);
