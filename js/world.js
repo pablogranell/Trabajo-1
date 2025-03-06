@@ -702,11 +702,33 @@ export function sceneInit(scene, loadingManager) {
 
     const fbxLoader = new FBXLoader(loadingManager.getManager());
     fbxLoader.load('modelos/3D/stone_bench_01_m13.fbx', (bench) => {
-        bench.scale.set(0.8, 1.2, 0.8);
+        // Cargar texturas
+        const textureLoader = loadingManager.textureLoader;
+        const baseColorTexture = textureLoader.load('modelos/3D/StoneBench_01_M13/Textures/stone_bench_01_m13_Base_color.png');
+        const normalTexture = textureLoader.load('modelos/3D/StoneBench_01_M13/Textures/stone_bench_01_m13_Normal_GL.png');
+        const roughnessTexture = textureLoader.load('modelos/3D/StoneBench_01_M13/Textures/stone_bench_01_m13_Roughness.png');
+
+        // Configurar texturas
+        baseColorTexture.colorSpace = THREE.sRGBEncoding;
+        baseColorTexture.flipY = true;
+        normalTexture.flipY = true;
+        roughnessTexture.flipY = true;
+
+        bench.scale.set(0.9, 1.2, 0.9);
         bench.position.copy(CONFIG.POSITIONS.BENCH_POSITION);
         
         bench.traverse((child) => {
             if (child.isMesh) {
+                // Crear y aplicar material PBR
+                const material = new THREE.MeshStandardMaterial({
+                    map: baseColorTexture,
+                    normalMap: normalTexture,
+                    roughnessMap: roughnessTexture,
+                    roughness: 1.0,
+                    metalness: 0.0
+                });
+                
+                child.material = material;
                 child.castShadow = true;
                 child.receiveShadow = true;
             }
