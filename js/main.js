@@ -52,29 +52,30 @@ class Scene {
         const sceneContainer = document.getElementById('scene-container');
         sceneContainer.style.filter = 'blur(5px)';
         sceneContainer.style.transition = 'filter 1.2s';
-        const startButton = document.createElement('button');
-        startButton.id = 'start-button';
-        startButton.textContent = 'Empezar';
-        document.body.appendChild(startButton);
+
+        // Get references to the HTML elements
+        const startContainer = document.getElementById('start-container');
+        const startButton = document.getElementById('start-button');
+
         // Boton para empezar el juego
         startButton.addEventListener('click', () => {
             this.controls.lock();
-            startButton.style.display = 'none';
+            startContainer.style.display = 'none';
             startButton.textContent = 'Continuar';
         });
         //Boton para continuar el juego
         this.controls.addEventListener('lock', () => {
             sceneContainer.style.filter = 'none';
-            startButton.style.display = 'none';
+            startContainer.style.display = 'none';
             this.isPaused = false;
         });
         //Boton para parar el juego
         this.controls.addEventListener('unlock', () => {
             sceneContainer.style.filter = 'blur(5px)';
-            startButton.style.opacity = '0';
-            startButton.style.display = 'block';
+            startContainer.style.opacity = '0';
+            startContainer.style.display = 'flex';
             setTimeout(() => {
-                startButton.style.opacity = '1';
+                startContainer.style.opacity = '1';
             }, 1000);
             this.isPaused = true;
             //Para que el jugador no se mueva
@@ -86,7 +87,8 @@ class Scene {
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
                 if (mutation.target.style.display === 'none') {
-                    startButton.style.display = 'block';
+                    startContainer.style.display = 'flex';
+                    startContainer.style.opacity = '1';
                     observer.disconnect();
                 }
             });

@@ -35,17 +35,95 @@ body {
     font: 40px Arial;
 }
 
-#start-button {
+#start-container {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    z-index: 100;
+    transition: opacity 1s;
+}
+
+#start-button {
+    font-family: Arial, sans-serif;
     padding: 40px 80px;
     border-radius: 50px;
     font-size: 40px;
     font-weight: bold;
     border: 2px solid white;
     transition: opacity 0.2s;
+    animation: glow 3s infinite alternate;
+}
+
+#start-button:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    color: rgb(255, 255, 255);
+}
+
+#controls-container {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 20px;
+    color: rgb(255, 255, 255);
+    font-family: Arial, sans-serif;
+    width: 300px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+#controls-title {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: rgb(255, 255, 255);
+}
+
+#controls-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.control-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.keys-container {
+    min-width: 100px;
+}
+
+.key-icon {
+    display: inline-block;
+    background-color: rgb(255, 255, 255);
+    color: rgb(0, 0, 0);
+    padding: 5px 10px;
+    margin: 0 5px;
+    border-radius: 5px;
+    font-weight: bold;
+    box-shadow: 0 2px 0 #222;
+    min-width: 15px;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.key-icon:hover {
+    background-color: rgb(255, 255, 255);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 0 #333;
+}
+
+@keyframes glow {
+    from {
+        box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+    }
+    to {
+        box-shadow: 0 0 15px rgba(255, 255, 255, 1);
+    }
 }
 
 
