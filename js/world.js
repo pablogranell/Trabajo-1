@@ -51,8 +51,8 @@ const CONFIG = {
         MIN_TREE_DISTANCE_FROM_BENCH: 3,
         FLOWER_SPAWN_RADIUS: 50,
         CLOUD_SPAWN_RADIUS: 500,
-        CLOUD_HEIGHT_MIN: 200,
-        CLOUD_HEIGHT_MAX: 500,
+        CLOUD_HEIGHT_MIN: 25,
+        CLOUD_HEIGHT_MAX: 50,
         SUN_POSITION: { phi: Math.PI * 0.1, theta: Math.PI * 0.1 }
     },
     
@@ -946,8 +946,7 @@ export function sceneInit(scene, loadingManager) {
             color: 0xffffff,
             transparent: false,
             opacity: 1.0,
-            roughness: 0.3,
-            metalness: 0.1
+            roughness: 0.8
         });
         
         const coreRadius = 2.5 + Math.random() * 2;
@@ -956,7 +955,7 @@ export function sceneInit(scene, loadingManager) {
             cloudMaterial
         );
         
-        const flattenY = 0.4 + Math.random() * 0.2;
+        const flattenY = 1 + Math.random() * 0.5;
         core.scale.y = flattenY;
         cloud.add(core);
         
@@ -1007,7 +1006,7 @@ export function sceneInit(scene, loadingManager) {
         const x = Math.cos(angle) * radius;
         const z = Math.sin(angle) * radius;
         
-        const y = 15 + Math.random() * 40;
+        const y = CONFIG.POSITIONS.CLOUD_HEIGHT_MIN + Math.random() * (CONFIG.POSITIONS.CLOUD_HEIGHT_MAX - CONFIG.POSITIONS.CLOUD_HEIGHT_MIN);
         
         cloud.position.set(x, y, z);
         cloud.userData.initialPosition.copy(cloud.position);

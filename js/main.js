@@ -10,6 +10,7 @@ class Scene {
         this.loadingManager = new LoadingManager();
         this.init();
         this.setupControls();
+        this.setupAudio();
         this.setupEventListeners();
         sceneInit(this.scene, this.loadingManager);
         this.animate();
@@ -52,6 +53,12 @@ class Scene {
         const startButton = document.getElementById('start-button');
 
         startButton.addEventListener('click', () => {
+            // Intentar reproducir la música cuando el usuario hace clic
+            if (!this.audioInitialized && this.backgroundMusic) {
+                this.backgroundMusic.play().then(() => {
+                    this.audioInitialized = true;
+                });
+            }
             this.controls.lock();
             startContainer.style.display = 'none';
             startButton.textContent = 'Continuar';
@@ -112,7 +119,7 @@ class Scene {
         });
         
         const onKeyDown = (event) => {
-            // Permite teclas P, K o L incluso cuando el juego está pausado o en pantalla inicial
+            // Permite teclas [P, K, L] cuando el juego está pausado o en pantalla inicial
             if (event.code === 'KeyP' || event.code === 'KeyK' || event.code === 'KeyL') {
                 switch (event.code) {
                     case 'KeyP':
@@ -141,7 +148,7 @@ class Scene {
                 return;
             }
 
-            // Para el resto de teclas, no procesar si está pausado
+            // Para el resto de teclas, no mover si está pausado
             if (this.isPaused) return;
             
             switch (event.code) {
@@ -246,6 +253,24 @@ class Scene {
         
         helpMsg.textContent = text;
         helpMsg.style.display = 'block';
+    }
+
+    setupAudio() {
+        this.backgroundMusic = new Audio('modelos/01ambienteparque01.wav');
+        this.backgroundMusic.loop = true;
+        this.backgroundMusic.volume = 0.2;
+        this.audioInitialized = false;
+        
+        // Silenciar cuando se cambia de pestaña
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (this.audioInitialized) {
+                    this.backgroundMusic.pause();
+                }
+            } else if (this.audioInitialized) {
+                this.backgroundMusic.play();
+            }
+        });
     }
 
     animate() {
