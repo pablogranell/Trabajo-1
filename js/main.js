@@ -6,14 +6,11 @@ import { update } from './update.js';
 
 class Scene {
     constructor() {
-        // Asignar la instancia actual a window.mainScene para acceso global
         window.mainScene = this;
-        
         this.loadingManager = new LoadingManager();
         this.init();
         this.setupControls();
         this.setupEventListeners();
-        // Pass loadingManager as the second parameter
         sceneInit(this.scene, this.loadingManager);
         this.animate();
     }
@@ -38,40 +35,34 @@ class Scene {
         this.camera.position.y = 1.6; // Altura de la camara, mas o menos
         this.isPaused = false;
         this.blurAmount = 5; // Valor inicial del blur
-        this.showingControls = true; // Estado de visibilidad de los controles
-        
-        // Variables para el banco
+        this.showingControls = true;
         this.isSitting = false;
         this.nearBench = false;
         this.bench = null;
-        this.standingHeight = 1.6; // Altura normal de pie
-        this.sittingHeight = 1.8; // Altura cuando está sentado
+        this.standingHeight = 1.6;
+        this.sittingHeight = 1.8;
     }
 
     setupControls() {
         this.controls = new PointerLockControls(this.camera, document.body);
-        //Contenedor de la escena
         const sceneContainer = document.getElementById('scene-container');
         sceneContainer.style.filter = `blur(${this.blurAmount}px)`;
         sceneContainer.style.transition = 'filter 1.2s';
-
-        // Get references to the HTML elements
         const startContainer = document.getElementById('start-container');
         const startButton = document.getElementById('start-button');
 
-        // Boton para empezar el juego
         startButton.addEventListener('click', () => {
             this.controls.lock();
             startContainer.style.display = 'none';
             startButton.textContent = 'Continuar';
         });
-        //Boton para continuar el juego
+
         this.controls.addEventListener('lock', () => {
             sceneContainer.style.filter = 'none';
             startContainer.style.display = 'none';
             this.isPaused = false;
         });
-        //Boton para parar el juego
+
         this.controls.addEventListener('unlock', () => {
             sceneContainer.style.filter = `blur(${this.blurAmount}px)`;
             startContainer.style.opacity = '0';
@@ -84,11 +75,12 @@ class Scene {
                 startContainer.style.opacity = '1';
             }
             this.isPaused = true;
-            this.showingControls = true; // Siempre mostrar controles al pausar
+            this.showingControls = true;
             //Para que el jugador no se mueva
             this.velocity.set(0, 0, 0);
             this.moveForward = this.moveBackward = this.moveLeft = this.moveRight = false;
         });
+
         // Verifica si la pantalla de carga esta oculta
         const loadingScreen = document.getElementById('loading-screen');
         const observer = new MutationObserver((mutations) => {
@@ -110,13 +102,12 @@ class Scene {
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(window.innerWidth, window.innerHeight);
         });
-        // Movimiento del jugador
+        
         const onKeyDown = (event) => {
-            // Permitir teclas P, K, L incluso cuando el juego está pausado o en pantalla inicial
+            // Permite teclas P, K o L incluso cuando el juego está pausado o en pantalla inicial
             if (event.code === 'KeyP' || event.code === 'KeyK' || event.code === 'KeyL') {
                 switch (event.code) {
                     case 'KeyP':
-                        // Toggle visibilidad de controles
                         const startContainer = document.getElementById('start-container');
                         this.showingControls = !this.showingControls;
                         if (this.isPaused || !this.controls.isLocked) {
@@ -127,14 +118,12 @@ class Scene {
                         }
                         break;
                     case 'KeyK':
-                        // Disminuir blur
                         this.blurAmount = Math.max(0, this.blurAmount - 1);
                         if (this.isPaused || !this.controls.isLocked) {
                             document.getElementById('scene-container').style.filter = `blur(${this.blurAmount}px)`;
                         }
                         break;
                     case 'KeyL':
-                        // Aumentar blur
                         this.blurAmount = Math.min(20, this.blurAmount + 1);
                         if (this.isPaused || !this.controls.isLocked) {
                             document.getElementById('scene-container').style.filter = `blur(${this.blurAmount}px)`;
@@ -165,7 +154,6 @@ class Scene {
                     this.moveRight = true;
                     break;
                 case 'KeyE':
-                    // Interacción con el banco
                     if (this.nearBench && !this.isSitting) {
                         this.sitOnBench();
                     } else if (this.isSitting) {
@@ -173,14 +161,13 @@ class Scene {
                     }
                     break;
                 case 'KeyZ':
-                    // Recargar página si está sentado
                     if (this.isSitting) {
                         location.reload();
                     }
                     break;
             }
         };
-        // Movimiento del jugador
+
         const onKeyUp = (event) => {
             switch (event.code) {
                 case 'ArrowUp':
@@ -206,35 +193,15 @@ class Scene {
         document.addEventListener('keyup', onKeyUp);
     }
 
-    // Método para sentarse en el banco
     sitOnBench() {
-        if (!this.bench) return;
-        
         this.isSitting = true;
-        
-        // Posicionar al jugador en el banco
-        const benchPosition = this.bench.position.clone();
-        
-        // Ajustar la posición para que el jugador quede correctamente sentado
-        benchPosition.y += this.sittingHeight;
-        
-        // Orientar la cámara para mirar al frente del banco
-        const currentRotation = this.camera.rotation.y;
-        
-        // Guardar la posición actual para cuando se levante
+        const height = this.bench.position.clone();
+        height.y += this.sittingHeight;
         this.standingPosition = this.camera.position.clone();
-        
-        // Posicionar cámara en el banco
-        this.camera.position.copy(benchPosition);
-        
-        // Deshabilitar movimiento
-        this.moveForward = this.moveBackward = this.moveLeft = this.moveRight = false;
-        
-        // Mostrar mensaje de ayuda
+        this.camera.position.copy(height);
         this.showHelpMessage("Pulsa E para levantarte, Z para recargar el jardín");
     }
 
-    // Método para levantarse del banco
     standUp() {
         this.isSitting = false;
         
@@ -243,19 +210,17 @@ class Scene {
             const currentRotation = this.camera.rotation.clone();
             this.camera.position.copy(this.standingPosition);
             this.camera.rotation.copy(currentRotation);
-        } else {
-            // Si no tenemos posición anterior, simplemente nos levantamos en el mismo sitio
-            this.camera.position.y = this.standingHeight;
         }
-        
+
         // Ocultar mensaje de ayuda
-        this.hideHelpMessage();
+        const helpMsg = document.getElementById('help-message');
+        helpMsg.style.display = 'none';
     }
 
-    // Método para mostrar mensaje de ayuda
     showHelpMessage(text) {
         let helpMsg = document.getElementById('help-message');
         
+        // La primera vez
         if (!helpMsg) {
             helpMsg = document.createElement('div');
             helpMsg.id = 'help-message';
@@ -274,14 +239,6 @@ class Scene {
         
         helpMsg.textContent = text;
         helpMsg.style.display = 'block';
-    }
-
-    // Método para ocultar mensaje de ayuda
-    hideHelpMessage() {
-        const helpMsg = document.getElementById('help-message');
-        if (helpMsg) {
-            helpMsg.style.display = 'none';
-        }
     }
 
     animate() {

@@ -2,87 +2,50 @@ const GRAVITY = 9.8;
 
 export function update(scene) {
     if (scene.isPaused) return;
-
     const time = performance.now();
     const delta = (time - scene.prevTime) / 1000;
 
-    // Verificar si el jugador está cerca del banco
-    checkBenchProximity(scene);
-
-    // Si el jugador está sentado, desactivar el movimiento y la gravedad
     if (scene.isSitting) {
         scene.velocity.set(0, 0, 0);
         scene.prevTime = time;
+        scene.benchIndicator.style.display = 'none';
         return;
     }
 
-    scene.velocity.x -= scene.velocity.x * 10.0 * delta;
-    scene.velocity.z -= scene.velocity.z * 10.0 * delta;
-
-    // Apply gravity
+    scene.velocity.x *= (1 - 10 * delta);
+    scene.velocity.z *= (1 - 10 * delta);
     scene.velocity.y -= GRAVITY * delta;
 
-    // Get current position
+    if (scene.moveForward || scene.moveBackward || scene.moveLeft || scene.moveRight) {
+        scene.direction.set(Number(scene.moveRight) - Number(scene.moveLeft),0,Number(scene.moveForward) - Number(scene.moveBackward)).normalize();
+        const moveSpeed = 50 * delta;
+        scene.velocity.x -= scene.direction.x * moveSpeed;
+        scene.velocity.z -= scene.direction.z * moveSpeed;
+    }
+
     const position = scene.camera.position;
-
-    scene.direction.z = Number(scene.moveForward) - Number(scene.moveBackward);
-    scene.direction.x = Number(scene.moveRight) - Number(scene.moveLeft);
-    scene.direction.normalize();
-
-    if (scene.moveForward || scene.moveBackward) {
-        scene.velocity.z -= scene.direction.z * 50.0 * delta;
-    }
-    if (scene.moveLeft || scene.moveRight) {
-        scene.velocity.x -= scene.direction.x * 50.0 * delta;
-    }
-
-    // Calculate ground height at current position
-    const groundHeight = Math.sin(position.x * 0.5) * Math.cos(position.z * 0.5) * 0.5 +
-                        Math.sin(position.x * 0.2) * Math.cos(position.z * 0.3) * 1;
-
-    // Update horizontal position
     scene.controls.moveRight(-scene.velocity.x * delta);
     scene.controls.moveForward(-scene.velocity.z * delta);
-
-    // Update vertical position directly
-    const newY = position.y + scene.velocity.y * delta;
+    const groundHeight = Math.sin(position.x * 0.5) * Math.cos(position.z * 0.5) * 0.5 + Math.sin(position.x * 0.2) * Math.cos(position.z * 0.3);
+    const minHeight = groundHeight + scene.standingHeight;
+    position.y = Math.max(minHeight, position.y + scene.velocity.y * delta);
     
-    // Ground collision check
-    if (newY < groundHeight + scene.standingHeight) {
-        position.y = groundHeight + scene.standingHeight;
+    if (position.y === minHeight) {
         scene.velocity.y = 0;
-    } else {
-        position.y = newY;
     }
 
+    checkBenchProximity(scene);
     scene.prevTime = time;
 }
 
-// Función para verificar la proximidad al banco
 function checkBenchProximity(scene) {
-    if (!scene.bench || !scene.benchInteractionSphere) return;
+    const playerPos = scene.camera.position;
+    const benchPos = scene.benchInteractionSphere.position;
+    const distanceSquared = Math.pow(playerPos.x - benchPos.x, 2) + Math.pow(playerPos.z - benchPos.z, 2);
+    const radiusSquared = Math.pow(scene.benchInteractionSphere.geometry.parameters.radius, 2);
+    scene.nearBench = distanceSquared < radiusSquared;
     
-    // Calcular la distancia entre el jugador y el centro de la esfera de interacción
-    const playerPosition = scene.camera.position.clone();
-    const benchPosition = scene.benchInteractionSphere.position.clone();
-    
-    // Comparar solo las coordenadas X y Z (ignorar altura Y)
-    playerPosition.y = 0;
-    benchPosition.y = 0;
-    
-    const distance = playerPosition.distanceTo(benchPosition);
-    const interactionRadius = scene.benchInteractionSphere.geometry.parameters.radius;
-    
-    // Verificar si el jugador está dentro del radio de interacción
-    const isNear = distance < interactionRadius;
-    
-    // Si el estado ha cambiado, actualizar variables y UI
-    if (isNear !== scene.nearBench) {
-        scene.nearBench = isNear;
-        
-        // Mostrar u ocultar el indicador de interacción
-        if (scene.benchIndicator) {
-            scene.benchIndicator.style.display = isNear && !scene.isSitting ? 'block' : 'none';
-        }
+    if (scene.benchIndicator) {
+        scene.benchIndicator.style.display = scene.nearBench ? 'block' : 'none';
     }
 }
