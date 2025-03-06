@@ -60,6 +60,9 @@ class Scene {
         this.controls.addEventListener('lock', () => {
             sceneContainer.style.filter = 'none';
             startContainer.style.display = 'none';
+            // Reañade el mensaje de interacion del banco solo si esta sentado
+            const helpMsg = document.getElementById('help-message');
+            if (helpMsg && this.isSitting) helpMsg.style.display = 'block';
             this.isPaused = false;
         });
 
@@ -76,6 +79,11 @@ class Scene {
             }
             this.isPaused = true;
             this.showingControls = true;
+            // Oculta los mensajes de ayuda cuando está en pausa
+            const helpMsg = document.getElementById('help-message');
+            const benchIndicator = document.getElementById('bench-indicator');
+            if (helpMsg) helpMsg.style.display = 'none';
+            if (benchIndicator) benchIndicator.style.display = 'none';
             //Para que el jugador no se mueva
             this.velocity.set(0, 0, 0);
             this.moveForward = this.moveBackward = this.moveLeft = this.moveRight = false;
@@ -233,7 +241,6 @@ class Scene {
             helpMsg.style.padding = '10px 20px';
             helpMsg.style.borderRadius = '5px';
             helpMsg.style.fontFamily = 'Arial, sans-serif';
-            helpMsg.style.zIndex = '1000';
             document.body.appendChild(helpMsg);
         }
         

@@ -46,7 +46,7 @@ const CONFIG = {
     
     POSITIONS: {
         TREE_SPAWN_RADIUS: 50,
-        BENCH_POSITION: new THREE.Vector3(-5, 0.3, 5),
+        BENCH_POSITION: new THREE.Vector3(-5, 0.5, 5),
         BENCH_INTERACTION_RADIUS: 2,
         MIN_TREE_DISTANCE_FROM_BENCH: 3,
         FLOWER_SPAWN_RADIUS: 50,
@@ -714,7 +714,7 @@ export function sceneInit(scene, loadingManager) {
         normalTexture.flipY = true;
         roughnessTexture.flipY = true;
 
-        bench.scale.set(0.9, 1.2, 0.9);
+        bench.scale.set(0.7, 1, 0.7);
         bench.position.copy(CONFIG.POSITIONS.BENCH_POSITION);
         
         bench.traverse((child) => {
