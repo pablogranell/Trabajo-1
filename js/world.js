@@ -538,22 +538,30 @@ function createFlower(loadingManager, type = Math.floor(Math.random() * 3)) {
             break;
 
         case 2:
-            const petalMaterial = new THREE.MeshPhongMaterial({ 
-                color: new THREE.Color().setHSL(Math.random(), 0.8, 0.6),
-                shininess: 30
+            const fbxLoader2 = new FBXLoader(loadingManager.getManager());
+            fbxLoader2.load('modelos/3D/vervain-low-poly/source/Vervain Unwrapped.fbx', (vervain) => {
+                const textureLoader = loadingManager.textureLoader;
+                const texture = textureLoader.load('modelos/3D/vervain-low-poly/source/Vervain Texture.png');
+                texture.colorSpace = THREE.sRGBEncoding;
+                texture.flipY = true;
+                
+                vervain.scale.set(0.002, 0.002, 0.002);
+                
+                vervain.traverse((child) => {
+                    if (child.isMesh) {
+                        const material = new THREE.MeshStandardMaterial({
+                            map: texture,
+                        });
+                        
+                        child.material = material;
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                        child.userData.type = 'flower';
+                    }
+                });
+                
+                group.add(vervain);
             });
-
-            for (let i = 0; i < 6; i++) {
-                const petal = new THREE.Mesh(
-                    new THREE.ConeGeometry(0.1, 0.2, 8),
-                    petalMaterial
-                );
-                petal.position.y = 0.5;
-                petal.rotation.z = -Math.PI / 6;
-                petal.rotation.y = (Math.PI / 3) * i;
-                petal.userData.type = 'flower';
-                group.add(petal);
-            }
             break;
     }
 
