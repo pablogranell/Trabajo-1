@@ -504,7 +504,7 @@ function createFlower(loadingManager, type = Math.floor(Math.random() * 4)) {
                 texture.colorSpace = THREE.sRGBEncoding;
                 texture.flipY = true;
                 
-                dandelion.scale.set(0.007, 0.007, 0.007);
+                dandelion.scale.set(0.01, 0.01, 0.01);
                 
                 dandelion.traverse((child) => {
                     if (child.isMesh) {
@@ -523,7 +523,7 @@ function createFlower(loadingManager, type = Math.floor(Math.random() * 4)) {
             });
             break;
         case 1:
-            const stemGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.5, 8);
+            const stemGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.8, 8);
             const stemMaterial = new THREE.MeshPhongMaterial({ color: 0x2d5a27 });
             const stem = new THREE.Mesh(stemGeometry, stemMaterial);
             stem.position.y = 0.25;
@@ -536,7 +536,7 @@ function createFlower(loadingManager, type = Math.floor(Math.random() * 4)) {
                 side: THREE.DoubleSide
             });
             const bell = new THREE.Mesh(bellGeometry, bellMaterial);
-            bell.position.y = 0.56;
+            bell.position.y = 0.72;
             bell.rotation.x = Math.PI;
             bell.userData.type = 'flower';
             group.add(bell);
@@ -550,7 +550,7 @@ function createFlower(loadingManager, type = Math.floor(Math.random() * 4)) {
                 texture.colorSpace = THREE.sRGBEncoding;
                 texture.flipY = true;
                 
-                vervain.scale.set(0.002, 0.002, 0.002);
+                vervain.scale.set(0.003, 0.003, 0.003);
                 
                 vervain.traverse((child) => {
                     if (child.isMesh) {
@@ -710,7 +710,7 @@ export function sceneInit(scene, loadingManager) {
         normalTexture.flipY = true;
         roughnessTexture.flipY = true;
 
-        bench.scale.set(0.7, 1, 0.7);
+        bench.scale.set(0.7, 1.2, 0.7);
         bench.position.copy(CONFIG.POSITIONS.BENCH_POSITION);
         
         bench.traverse((child) => {
