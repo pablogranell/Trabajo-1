@@ -486,69 +486,45 @@ function createTree(type = Math.floor(Math.random() * 3)) {
     return group;
 }
 
-function createFlower(type = Math.floor(Math.random() * 3)) {
+function createFlower(loadingManager, type = Math.floor(Math.random() * 3)) {
     const group = new THREE.Group();
     group.userData.type = 'flowerGroup';
     
-    const stemGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.5, 8);
-    const stemMaterial = new THREE.MeshPhongMaterial({ color: 0x2d5a27 });
-    const stem = new THREE.Mesh(stemGeometry, stemMaterial);
-    stem.position.y = 0.25;
-    stem.userData.type = 'stem';
-    group.add(stem);
-
     switch(type) {
         case 0:
-            const centerGeometry = new THREE.SphereGeometry(0.08, 8, 8);
-            const centerMaterial = new THREE.MeshPhongMaterial({ color: 0xffd700 });
-            const center = new THREE.Mesh(centerGeometry, centerMaterial);
-            center.position.y = 0.5;
-            center.userData.type = 'flower';
-            group.add(center);
-
-            const petalCount = 12;
-            const petalColor = new THREE.Color().setHSL(Math.random() * 0.1 + 0.1, 0.8, 0.9);
-            for (let i = 0; i < petalCount; i++) {
-                const petal = new THREE.Mesh(
-                    new THREE.PlaneGeometry(0.15, 0.08),
-                    new THREE.MeshPhongMaterial({ 
-                        color: petalColor,
-                        side: THREE.DoubleSide,
-                        transparent: true,
-                        opacity: 0.9
-                    })
-                );
-                petal.position.y = 0.5;
-                petal.rotation.y = (Math.PI * 2 / petalCount) * i;
-                petal.rotation.x = Math.PI / 2.5;
+            const fbxLoader = new FBXLoader(loadingManager.getManager());
+            fbxLoader.load('modelos/3D/dandelion-low-poly/source/Dandelion Unwrapped.fbx', (dandelion) => {
+                const textureLoader = loadingManager.textureLoader;
+                const texture = textureLoader.load('modelos/3D/dandelion-low-poly/source/Dandelion Texture.png');
+                texture.colorSpace = THREE.sRGBEncoding;
+                texture.flipY = true;
                 
-                petal.rotation.z = (Math.random() - 0.5) * 0.2;
+                dandelion.scale.set(0.007, 0.007, 0.007);
                 
-                const scale = 0.8 + Math.random() * 0.4;
-                petal.scale.set(scale, scale, scale);
+                dandelion.traverse((child) => {
+                    if (child.isMesh) {
+                        const material = new THREE.MeshStandardMaterial({
+                            map: texture,
+                        });
+                        
+                        child.material = material;
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                        child.userData.type = 'flower';
+                    }
+                });
                 
-                petal.userData.type = 'flower';
-                group.add(petal);
-            }
-            
-            const leafGeometry = new THREE.PlaneGeometry(0.1, 0.05);
-            const leafMaterial = new THREE.MeshPhongMaterial({ 
-                color: 0x2d8a27, 
-                side: THREE.DoubleSide 
+                group.add(dandelion);
             });
-            
-            for (let i = 0; i < 2; i++) {
-                const leaf = new THREE.Mesh(leafGeometry, leafMaterial);
-                leaf.position.y = 0.15 + i * 0.15;
-                leaf.position.x = 0.05;
-                leaf.rotation.x = Math.PI / 2;
-                leaf.rotation.y = Math.PI / 4;
-                leaf.userData.type = 'leaf';
-                group.add(leaf);
-            }
             break;
-
         case 1:
+            const stemGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.5, 8);
+            const stemMaterial = new THREE.MeshPhongMaterial({ color: 0x2d5a27 });
+            const stem = new THREE.Mesh(stemGeometry, stemMaterial);
+            stem.position.y = 0.25;
+            stem.userData.type = 'stem';
+            group.add(stem);
+
             const bellGeometry = new THREE.ConeGeometry(0.12, 0.2, 8, 1, true);
             const bellMaterial = new THREE.MeshPhongMaterial({ 
                 color: new THREE.Color().setHSL(Math.random() * 0.2 + 0.7, 0.8, 0.6),
@@ -704,7 +680,7 @@ export function sceneInit(scene, loadingManager) {
     scene.fog = new THREE.FogExp2(CONFIG.COLORS.FOG_COLOR, CONFIG.WORLD.FOG_DENSITY);
 
     const fbxLoader = new FBXLoader(loadingManager.getManager());
-    fbxLoader.load('modelos/3D/stone_bench_01_m13.fbx', (bench) => {
+    fbxLoader.load('modelos/3D/StoneBench_01_M13/Source/stone_bench_01_m13.fbx', (bench) => {
         // Cargar texturas
         const textureLoader = loadingManager.textureLoader;
         const baseColorTexture = textureLoader.load('modelos/3D/StoneBench_01_M13/Textures/stone_bench_01_m13_Base_color.png');
@@ -853,7 +829,7 @@ export function sceneInit(scene, loadingManager) {
         const y = Math.sin(x * 0.5) * Math.cos(z * 0.5) * 0.5 +
                  Math.sin(x * 0.2) * Math.cos(z * 0.3);
         
-        const flower = createFlower();
+        const flower = createFlower(loadingManager);
         flower.position.set(x, y, z);
         flower.rotation.y = Math.random() * Math.PI * 2;
         STATE.flowers.push(flower);
