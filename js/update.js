@@ -3,6 +3,13 @@ const MOVE_SPEED = 12;
 const MAX_DELTA = 0.1; // Máximo delta tiempo permitido (Evista saltos en bajos FPS)
 const FRICTION = 0.9; // Factor de fricción para reducir la velocidad
 
+const MAP_LIMITS = {
+    minX: -24,
+    maxX: 24,
+    minZ: -24,
+    maxZ: 24
+};
+
 export function update(scene) {
     if (scene.isPaused) return;
     
@@ -45,6 +52,7 @@ export function update(scene) {
         scene.velocity.y = 0;
     }
 
+    checkMapBoundaries(scene, position);
     checkBenchProximity(scene);
 }
 
@@ -63,5 +71,30 @@ function checkBenchProximity(scene) {
     
     if (scene.benchIndicator) {
         scene.benchIndicator.style.display = scene.nearBench ? 'block' : 'none';
+    }
+}
+
+function checkMapBoundaries(scene, position) {
+    let collision = false;
+    
+    // Comprobar y corregir límites en X
+    if (position.x < MAP_LIMITS.minX) {
+        position.x = MAP_LIMITS.minX;
+        scene.velocity.x = 0;
+        collision = true;
+    } else if (position.x > MAP_LIMITS.maxX) {
+        position.x = MAP_LIMITS.maxX;
+        scene.velocity.x = 0;
+        collision = true;
+    }
+    // Comprobar y corregir límites en Z
+    if (position.z < MAP_LIMITS.minZ) {
+        position.z = MAP_LIMITS.minZ;
+        scene.velocity.z = 0;
+        collision = true;
+    } else if (position.z > MAP_LIMITS.maxZ) {
+        position.z = MAP_LIMITS.maxZ;
+        scene.velocity.z = 0;
+        collision = true;
     }
 }
