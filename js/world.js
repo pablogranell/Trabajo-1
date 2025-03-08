@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const CONFIG = {
     WORLD: {
@@ -486,7 +487,7 @@ function createTree(type = Math.floor(Math.random() * 3)) {
     return group;
 }
 
-function createFlower(loadingManager, type = Math.floor(Math.random() * 3)) {
+function createFlower(loadingManager, type = Math.floor(Math.random() * 4)) {
     const group = new THREE.Group();
     group.userData.type = 'flowerGroup';
     
@@ -561,6 +562,12 @@ function createFlower(loadingManager, type = Math.floor(Math.random() * 3)) {
                 });
                 
                 group.add(vervain);
+            });
+            break;
+        case 3:
+            const glbLoader = new GLTFLoader(loadingManager.getManager());
+            glbLoader.load('modelos/3D/low_poly_flowers.glb', (rose) => {
+                group.add(rose.scene);
             });
             break;
     }
