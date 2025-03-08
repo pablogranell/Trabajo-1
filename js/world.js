@@ -62,8 +62,8 @@ const CONFIG = {
         SKYBOX_ROTATION_SPEED: 0.0005,
         CLOUD_MOVEMENT_SPEED_MIN: 0.002,
         CLOUD_MOVEMENT_SPEED_MAX: 0.02,
-        BIRD_SPEED_MIN: 0.005,
-        BIRD_SPEED_MAX: 0.02,
+        BIRD_SPEED_MIN: 0.0005,
+        BIRD_SPEED_MAX: 0.005,
         BUTTERFLY_SPEED_MIN: 0.01,
         BUTTERFLY_SPEED_MAX: 0.05
     },
@@ -951,19 +951,19 @@ export function sceneInit(scene, loadingManager) {
 
     const birds = [];
     const night = new Array(13).fill(false);
-        // Manualmente, no tiene algortimo
-        night[1] = true;
-        night[5] = true;
-        night[9] = true;
-        night[10] = true;
-        night[12] = true;
-        if (!night[sky]) {
-            for (let i = 0; i < CONFIG.COUNTS.BIRD_COUNT; i++) {
-                const bird = createBird();
-                scene.add(bird);
-                birds.push(bird);
-            }
+    // Manualmente, no tiene algortimo
+    night[1] = true;
+    night[5] = true;
+    night[9] = true;
+    night[10] = true;
+    night[12] = true;
+    if (!night[sky]) {
+        for (let i = 0; i < CONFIG.COUNTS.BIRD_COUNT; i++) {
+            const bird = createBird();
+            scene.add(bird);
+            birds.push(bird);
         }
+    }
     STATE.birds = birds;
 
     function createCloud() {
@@ -1052,16 +1052,26 @@ export function sceneInit(scene, loadingManager) {
     
     function createButterfly() {
         const butterfly = new THREE.Group();
+        const night = new Array(13).fill(false);
+        // Manualmente, no tiene algortimo
+        night[1] = true;
+        night[5] = true;
+        night[9] = true;
+        night[10] = true;
+        night[12] = true;
         
+        const isNight = night[sky];
         const hue = Math.random();
         let butterflyColor, secondaryColor;
+        let luminosity = isNight ? 0.8 : 0.6;
+        let saturation = isNight ? 0.9 : 0.85;
         
         if (Math.random() < 0.5) {
-            butterflyColor = new THREE.Color().setHSL(hue, 0.85, 0.6);
-            secondaryColor = new THREE.Color().setHSL((hue + 0.1) % 1, 0.8, 0.5);
+            butterflyColor = new THREE.Color().setHSL(hue, saturation, luminosity);
+            secondaryColor = new THREE.Color().setHSL((hue + 0.1) % 1, saturation - 0.05, luminosity - 0.1);
         } else {
-            butterflyColor = new THREE.Color().setHSL(hue, 0.5, 0.7);
-            secondaryColor = new THREE.Color().setHSL((hue + 0.5) % 1, 0.4, 0.6);
+            butterflyColor = new THREE.Color().setHSL(hue, saturation - 0.35, luminosity + 0.1);
+            secondaryColor = new THREE.Color().setHSL((hue + 0.5) % 1, saturation - 0.45, luminosity);
         }
         
         const bodyGeometry = new THREE.CylinderGeometry(0.01, 0.01, 0.1, 8);
@@ -1110,7 +1120,9 @@ export function sceneInit(scene, loadingManager) {
                 transparent: true,
                 opacity: 0.95,
                 side: THREE.DoubleSide,
-                roughness: 0.5
+                roughness: 1,
+                emissive: isNight ? butterflyColor : 0x000000,
+                emissiveIntensity: isNight ? 1 : 0
             });
             
             const upperWing = new THREE.Mesh(upperWingGeometry, wingMaterial);
@@ -1140,7 +1152,9 @@ export function sceneInit(scene, loadingManager) {
                 transparent: true,
                 opacity: 0.95,
                 side: THREE.DoubleSide,
-                roughness: 0.5
+                roughness: 1,
+                emissive: isNight ? secondaryColor : 0x000000,
+                emissiveIntensity: isNight ? 1 : 0
             });
             
             const lowerWing = new THREE.Mesh(lowerWingGeometry, lowerWingMaterial);
