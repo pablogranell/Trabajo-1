@@ -935,11 +935,20 @@ export function sceneInit(scene, loadingManager) {
     }
 
     const birds = [];
-    for (let i = 0; i < CONFIG.COUNTS.BIRD_COUNT; i++) {
-        const bird = createBird();
-        scene.add(bird);
-        birds.push(bird);
-    }
+    const night = new Array(13).fill(false);
+        // Manuelamente, no tiene algortimo
+        night[1] = true;
+        night[5] = true;
+        night[9] = true;
+        night[10] = true;
+        night[12] = true;
+        if (!night[sky]) {
+            for (let i = 0; i < CONFIG.COUNTS.BIRD_COUNT; i++) {
+                const bird = createBird();
+                scene.add(bird);
+                birds.push(bird);
+            }
+        }
     STATE.birds = birds;
 
     function createCloud() {
