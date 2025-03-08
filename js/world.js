@@ -10,7 +10,7 @@ const CONFIG = {
     },
     
     COUNTS: {
-        GRASS_INSTANCES_MAX: 100000,
+        GRASS_INSTANCES_MAX: 200000,
         TREE_COUNT: 50,
         FLOWER_COUNT: 150,
         BIRD_COUNT: 10,
@@ -69,7 +69,7 @@ const CONFIG = {
     },
     
     LIGHTING: {
-        AMBIENT_LIGHT_INTENSITY: 0.8,
+        AMBIENT_LIGHT_INTENSITY: 1,
         SUN_LIGHT_INTENSITY: 100,
         SUN_LIGHT_COLOR: 0xfffaed,
         SKY_ANALYSIS: {
@@ -82,6 +82,10 @@ const CONFIG = {
 
 const STATE = {
     grassInstances: [],
+    grassVisibility: [],
+    grassDistances: [],
+    cullingFrequency: 0, // Variable abajo
+    cullingFrameCount: 0,
     flowers: [],
     trees: [],
     birds: [],
@@ -782,6 +786,10 @@ export function sceneInit(scene, loadingManager) {
 
     instancedGrass.name = 'grass';
     instancedGrass.userData.type = 'grass';
+    instancedGrass.castShadow = true;
+    instancedGrass.receiveShadow = true;
+    instancedGrass.material.side = THREE.DoubleSide;
+    instancedGrass.frustumCulled = false; //Manual para asi ajustar tambien el viento
     
     const matrix = new THREE.Matrix4();
     let instanceCount = 0;
@@ -806,11 +814,16 @@ export function sceneInit(scene, loadingManager) {
             scale: scale
         });
         
+        STATE.grassVisibility.push(true);
+        STATE.grassDistances.push(0);
+        
         instanceCount++;
     }
     instancedGrass.count = instanceCount;
     instancedGrass.instanceMatrix.needsUpdate = true;
     scene.add(instancedGrass);
+
+    STATE.grassMesh = instancedGrass;
 
     for (let i = 0; i < CONFIG.COUNTS.TREE_COUNT; i++) {
         const x = (Math.random() - 0.5) * CONFIG.POSITIONS.TREE_SPAWN_RADIUS;
@@ -1340,6 +1353,34 @@ export function sceneInit(scene, loadingManager) {
                 }
             }
             
+            if (window.mainScene && window.mainScene.camera) {
+                const camera = window.mainScene.camera;
+                STATE.cullingFrameCount++;
+                if (STATE.cullingFrameCount > STATE.cullingFrequency) {
+                    this.updateGrassCulling(camera);
+                    STATE.cullingFrameCount = 0;
+                }
+            }
+            
+            const fps = 1000 / deltaTime;
+            switch (true) {
+                case fps < 20:
+                    STATE.cullingFrequency = 50; // Menos frecuente si hay bajo rendimiento
+                    break;
+                case fps > 59:
+                    STATE.cullingFrequency = 1; // Más frecuente si hay buen rendimiento
+                    break;
+                case fps > 40:
+                    STATE.cullingFrequency = 10;
+                    break;
+                case fps < 30:
+                    STATE.cullingFrequency = 30;
+                    break;
+                default:
+                    STATE.cullingFrequency = 20;
+                    break;
+            }
+            
             this.animateGrass();
             this.animateFlowers();
             this.animateTrees();
@@ -1351,30 +1392,93 @@ export function sceneInit(scene, loadingManager) {
             requestAnimationFrame(() => this.animate());
         },
         
+        updateGrassCulling: function(camera) {
+            if (!camera || !STATE.grassMesh) return;
+            
+            // Create frustum from camera
+            const frustum = new THREE.Frustum();
+            const projScreenMatrix = new THREE.Matrix4();
+            projScreenMatrix.multiplyMatrices(
+                camera.projectionMatrix,
+                camera.matrixWorldInverse
+            );
+            frustum.setFromProjectionMatrix(projScreenMatrix);
+            
+            // Get camera position for distance calculation
+            const cameraPosition = camera.position;
+            // Define distance thresholds for LOD
+            const MAX_DISTANCE = 25; // Cull grass beyond this distance
+            
+            for (let i = 0; i < STATE.grassInstances.length; i++) {
+                const grass = STATE.grassInstances[i];
+                const distance = grass.position.distanceTo(cameraPosition);
+                
+                // Update distance for LOD
+                STATE.grassDistances[i] = distance;
+                
+                // Check if in frustum and within max distance
+                const isInFrustum = frustum.intersectsSphere(
+                    new THREE.Sphere(grass.position, 0.5)
+                );
+                
+                STATE.grassVisibility[i] = isInFrustum && distance < MAX_DISTANCE;
+            }
+        },
+        
         animateGrass: function() {
+            if (!STATE.grassMesh) return;
+            
             const matrix = new THREE.Matrix4();
             const quaternion = new THREE.Quaternion();
             const targetQuaternion = new THREE.Quaternion();
+            const zeroMatrix = new THREE.Matrix4().scale(new THREE.Vector3(0, 0, 0));
+            
+            // Define LOD distance thresholds
+            const CLOSE_DISTANCE = 10;
+            const MID_DISTANCE = 20;
             
             for (let i = 0; i < STATE.grassInstances.length; i++) {
                 const grass = STATE.grassInstances[i];
                 
-                const windEffect = 
-                    Math.sin(STATE.time * 0.8 + grass.position.x * 0.05) * 0.15 +
-                    Math.sin(STATE.time + grass.position.z * 0.05) * 0.1;
+                // Skip updates for culled grass
+                if (!STATE.grassVisibility[i]) {
+                    STATE.grassMesh.setMatrixAt(i, zeroMatrix);
+                    continue;
+                }
+                
+                const distance = STATE.grassDistances[i];
+                
+                // Apply different animation detail based on distance (LOD)
+                let windEffect;
+                
+                if (distance < CLOSE_DISTANCE) {
+                    // Full animation for close grass
+                    windEffect = 
+                        Math.sin(STATE.time * 0.8 + grass.position.x * 0.05) * 0.15 +
+                        Math.sin(STATE.time + grass.position.z * 0.05) * 0.1;
+                } else if (distance < MID_DISTANCE) {
+                    // Simplified animation for mid-distance grass
+                    windEffect = Math.sin(STATE.time * 0.8 + grass.position.x * 0.05) * 0.1;
+                }
                 
                 matrix.makeRotationY(grass.baseRotation);
                 quaternion.setFromRotationMatrix(matrix);
                 
                 targetQuaternion.setFromEuler(new THREE.Euler(0, grass.baseRotation, windEffect));
-                quaternion.slerp(targetQuaternion, 0.3);
+                
+                // Less smooth interpolation for distant grass
+                const slerpFactor = distance < CLOSE_DISTANCE ? 0.3 : 0.1;
+                quaternion.slerp(targetQuaternion, slerpFactor);
                 
                 matrix.makeRotationFromQuaternion(quaternion);
                 matrix.setPosition(grass.position.x, grass.position.y, grass.position.z);
                 
-                instancedGrass.setMatrixAt(i, matrix);
+                // Apply original scale
+                matrix.scale(new THREE.Vector3(grass.scale, 1, grass.scale));
+                
+                STATE.grassMesh.setMatrixAt(i, matrix);
             }
-            instancedGrass.instanceMatrix.needsUpdate = true;
+            STATE.grassMesh.instanceMatrix.needsUpdate = true;
         },
         
         animateFlowers: function() {
