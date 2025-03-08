@@ -41,8 +41,8 @@ const CONFIG = {
             return groundColors[Math.floor(Math.random() * groundColors.length)];
         })(),
         GRASS_COLOR: 0x5ab950, // Verde claro
-        TRUNK_COLOR: 0x4a2f21,
-        BIRCH_TRUNK_COLOR: 0xd3d3d3
+        TRUNK_COLOR: 0x4a2f21, // Marrón oscuro
+        BIRCH_TRUNK_COLOR: 0xd3d3d3 // Gris
     },
     
     POSITIONS: {
@@ -611,7 +611,6 @@ export function sceneInit(scene, loadingManager) {
     const segments = CONFIG.WORLD.TERRAIN_SEGMENTS;
     const halfSize = size / 2;
     
-    // Initialize FPS counter and keyboard controls
     if (!STATE.fpsCounter.element) {
         STATE.fpsCounter.element = createFPSCounter();
         document.addEventListener('keydown', (event) => {
@@ -666,7 +665,7 @@ export function sceneInit(scene, loadingManager) {
     ground.userData.type = 'ground';
     scene.add(ground);
 
-    const skyboxNumber = Math.floor(Math.random() * 13) + 1; // Número aleatorio entre 1 y 13
+    const skyboxNumber = Math.floor(Math.random() * 13) + 1; // Fondo aleatorio (13)
     sky = skyboxNumber;
     const skyboxPath = `modelos/Cielos/sky${skyboxNumber}.png`;
     console.log(`Cargando skybox: ${skyboxPath}`);
@@ -688,7 +687,6 @@ export function sceneInit(scene, loadingManager) {
                         skyAnalysis
                     );
                 } else {
-                    // Si aún no tenemos las luces configuradas, al menos actualizamos los colores del ambiente
                     updateEnvironmentColors(scene, skyAnalysis);
                 }
             }
@@ -700,13 +698,13 @@ export function sceneInit(scene, loadingManager) {
 
     const fbxLoader = new FBXLoader(loadingManager.getManager());
     fbxLoader.load('modelos/3D/StoneBench_01_M13/Source/stone_bench_01_m13.fbx', (bench) => {
-        // Cargar texturas
+        // Cargar texturas (creo que js ya hace algo implicito)
         const textureLoader = loadingManager.textureLoader;
         const baseColorTexture = textureLoader.load('modelos/3D/StoneBench_01_M13/Textures/stone_bench_01_m13_Base_color.png');
         const normalTexture = textureLoader.load('modelos/3D/StoneBench_01_M13/Textures/stone_bench_01_m13_Normal_GL.png');
         const roughnessTexture = textureLoader.load('modelos/3D/StoneBench_01_M13/Textures/stone_bench_01_m13_Roughness.png');
 
-        // Configurar texturas
+        // Configurar texturas (blender standar)
         baseColorTexture.colorSpace = THREE.sRGBEncoding;
         baseColorTexture.flipY = true;
         normalTexture.flipY = true;
@@ -717,7 +715,6 @@ export function sceneInit(scene, loadingManager) {
         
         bench.traverse((child) => {
             if (child.isMesh) {
-                // Crear y aplicar material PBR
                 const material = new THREE.MeshStandardMaterial({
                     map: baseColorTexture,
                     normalMap: normalTexture,
@@ -911,10 +908,8 @@ export function sceneInit(scene, loadingManager) {
         const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
         bird.add(body);
         
-        // Crear alas más redondeadas y naturales usando ShapeGeometry
         const wingShape = new THREE.Shape();
         
-        // Dibujar la forma del ala con curvas para hacerla más redondeada
         wingShape.moveTo(0, 0);
         wingShape.bezierCurveTo(
             0.1, 0.02,
@@ -1351,7 +1346,6 @@ export function sceneInit(scene, loadingManager) {
             
             STATE.time += deltaTime;
             
-            // FPS Counter update
             if (STATE.fpsCounter.enabled) {
                 STATE.fpsCounter.frames++;
                 const elapsedTime = currentTime - STATE.fpsCounter.lastTime;
@@ -1408,7 +1402,6 @@ export function sceneInit(scene, loadingManager) {
         updateGrassCulling: function(camera) {
             if (!camera || !STATE.grassMesh) return;
             
-            // Create frustum from camera
             const frustum = new THREE.Frustum();
             const projScreenMatrix = new THREE.Matrix4();
             projScreenMatrix.multiplyMatrices(
@@ -1417,19 +1410,15 @@ export function sceneInit(scene, loadingManager) {
             );
             frustum.setFromProjectionMatrix(projScreenMatrix);
             
-            // Get camera position for distance calculation
             const cameraPosition = camera.position;
-            // Define distance thresholds for LOD
-            const MAX_DISTANCE = 25; // Cull grass beyond this distance
+            const MAX_DISTANCE = 25;
             
             for (let i = 0; i < STATE.grassInstances.length; i++) {
                 const grass = STATE.grassInstances[i];
                 const distance = grass.position.distanceTo(cameraPosition);
                 
-                // Update distance for LOD
                 STATE.grassDistances[i] = distance;
                 
-                // Check if in frustum and within max distance
                 const isInFrustum = frustum.intersectsSphere(
                     new THREE.Sphere(grass.position, 0.5)
                 );
@@ -1446,14 +1435,12 @@ export function sceneInit(scene, loadingManager) {
             const targetQuaternion = new THREE.Quaternion();
             const zeroMatrix = new THREE.Matrix4().scale(new THREE.Vector3(0, 0, 0));
             
-            // Define LOD distance thresholds
             const CLOSE_DISTANCE = 10;
             const MID_DISTANCE = 20;
             
             for (let i = 0; i < STATE.grassInstances.length; i++) {
                 const grass = STATE.grassInstances[i];
                 
-                // Skip updates for culled grass
                 if (!STATE.grassVisibility[i]) {
                     STATE.grassMesh.setMatrixAt(i, zeroMatrix);
                     continue;
@@ -1461,16 +1448,13 @@ export function sceneInit(scene, loadingManager) {
                 
                 const distance = STATE.grassDistances[i];
                 
-                // Apply different animation detail based on distance (LOD)
                 let windEffect;
                 
                 if (distance < CLOSE_DISTANCE) {
-                    // Full animation for close grass
                     windEffect = 
                         Math.sin(STATE.time * 0.8 + grass.position.x * 0.05) * 0.15 +
                         Math.sin(STATE.time + grass.position.z * 0.05) * 0.1;
                 } else if (distance < MID_DISTANCE) {
-                    // Simplified animation for mid-distance grass
                     windEffect = Math.sin(STATE.time * 0.8 + grass.position.x * 0.05) * 0.1;
                 }
                 
@@ -1478,15 +1462,11 @@ export function sceneInit(scene, loadingManager) {
                 quaternion.setFromRotationMatrix(matrix);
                 
                 targetQuaternion.setFromEuler(new THREE.Euler(0, grass.baseRotation, windEffect));
-                
-                // Less smooth interpolation for distant grass
                 const slerpFactor = distance < CLOSE_DISTANCE ? 0.3 : 0.1;
                 quaternion.slerp(targetQuaternion, slerpFactor);
                 
                 matrix.makeRotationFromQuaternion(quaternion);
                 matrix.setPosition(grass.position.x, grass.position.y, grass.position.z);
-                
-                // Apply original scale
                 matrix.scale(new THREE.Vector3(grass.scale, 1, grass.scale));
                 
                 STATE.grassMesh.setMatrixAt(i, matrix);

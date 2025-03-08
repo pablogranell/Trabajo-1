@@ -1,7 +1,7 @@
 const GRAVITY = 9.8;
 const MOVE_SPEED = 12;
 const MAX_DELTA = 0.1; // Máximo delta tiempo permitido (Evista saltos en bajos FPS)
-const FRICTION = 0.9; // Factor de fricción para reducir la velocidad
+const FRICTION = 0.9;
 
 const MAP_LIMITS = {
     minX: -24,
@@ -14,7 +14,7 @@ export function update(scene) {
     if (scene.isPaused) return;
     
     const time = performance.now();
-    // Limitar el delta tiempo para evitar saltos en bajos FPS
+    // Limitar el delta para evitar saltos en bajos FPS
     const delta = Math.min((time - scene.prevTime) / 1000, MAX_DELTA);
     scene.prevTime = time;
 
@@ -37,7 +37,6 @@ export function update(scene) {
     }
 
     const position = scene.camera.position;
-    // Usar delta tiempo limitado para mover la cámara de forma suave
     scene.controls.moveRight(-scene.velocity.x * delta);
     scene.controls.moveForward(-scene.velocity.z * delta);
     
@@ -45,9 +44,8 @@ export function update(scene) {
                          Math.sin(position.x * 0.2) * Math.cos(position.z * 0.3);
     const minHeight = groundHeight + scene.standingHeight;
     
-    // Suavizar la transición para la altura también
     position.y = Math.max(minHeight, position.y + scene.velocity.y * delta);
-    if (position.y <= minHeight + 0.01) { // pequeña tolerancia para evitar rebote
+    if (position.y <= minHeight + 0.01) {
         position.y = minHeight;
         scene.velocity.y = 0;
     }
@@ -77,7 +75,6 @@ function checkBenchProximity(scene) {
 function checkMapBoundaries(scene, position) {
     let collision = false;
     
-    // Comprobar y corregir límites en X
     if (position.x < MAP_LIMITS.minX) {
         position.x = MAP_LIMITS.minX;
         scene.velocity.x = 0;
@@ -87,7 +84,7 @@ function checkMapBoundaries(scene, position) {
         scene.velocity.x = 0;
         collision = true;
     }
-    // Comprobar y corregir límites en Z
+    
     if (position.z < MAP_LIMITS.minZ) {
         position.z = MAP_LIMITS.minZ;
         scene.velocity.z = 0;
