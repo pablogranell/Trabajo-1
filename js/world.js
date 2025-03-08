@@ -10,7 +10,7 @@ const CONFIG = {
     },
     
     COUNTS: {
-        GRASS_INSTANCES_MAX: 1000,
+        GRASS_INSTANCES_MAX: 100000,
         TREE_COUNT: 50,
         FLOWER_COUNT: 150,
         BIRD_COUNT: 10,
@@ -1587,9 +1587,9 @@ export function sceneInit(scene, loadingManager) {
             const sizeAttribute = pollenSystem.geometry.attributes.size.array;
             
             for (let i = 0; i < positions.length / 3; i++) {
-                positions[i * 3] += (velocities[i].x + Math.sin(STATE.time * 0.5 + i) * 0.0003) * STATE.time * 0.005;
-                positions[i * 3 + 1] += (velocities[i].y + Math.cos(STATE.time * 0.3 + i) * 0.0003) * STATE.time * 0.005;
-                positions[i * 3 + 2] += (velocities[i].z + Math.sin(STATE.time * 0.4 + i) * 0.0003) * STATE.time * 0.005;
+                positions[i * 3] += (velocities[i].x + Math.sin(STATE.time * 0.5 + i) * 0.0003) * STATE.time * 0.05;
+                positions[i * 3 + 1] += (velocities[i].y + Math.cos(STATE.time * 0.3 + i) * 0.0003) * STATE.time * 0.05;
+                positions[i * 3 + 2] += (velocities[i].z + Math.sin(STATE.time * 0.4 + i) * 0.0003) * STATE.time * 0.05;
                 
                 const sizePulse = 0.8 + 0.2 * Math.sin(STATE.time * 0.2 + i * 0.1);
                 sizeAttribute[i] = originalSizes[i] * sizePulse;
