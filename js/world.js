@@ -100,6 +100,8 @@ const STATE = {
     }
 };
 
+export let sky = null;
+
 function analyzeSkyTexture(texture, options = {}) {
     if (!texture || !texture.image) return null;
     
@@ -670,6 +672,7 @@ export function sceneInit(scene, loadingManager) {
     scene.add(ground);
 
     const skyboxNumber = Math.floor(Math.random() * 13) + 1; // Número aleatorio entre 1 y 13
+    sky = skyboxNumber;
     const skyboxPath = `modelos/Cielos/sky${skyboxNumber}.png`;
     console.log(`Cargando skybox: ${skyboxPath}`);
 
@@ -857,6 +860,7 @@ export function sceneInit(scene, loadingManager) {
         scene.add(flower);
     }
 
+    //Luces iniciales
     const ambientLight = new THREE.AmbientLight(0xffffff, CONFIG.LIGHTING.AMBIENT_LIGHT_INTENSITY);
     scene.add(ambientLight);
 
@@ -869,6 +873,7 @@ export function sceneInit(scene, loadingManager) {
     window.mainScene.sunLight = sunLight;
     window.mainScene.ambientLight = ambientLight;
     
+    // Generador de ambiente v2
     if (STATE.skyAnalysis.dominantColor) {
         const skyAnalysis = {
             dominantColor: STATE.skyAnalysis.dominantColor,

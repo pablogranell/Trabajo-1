@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
 import { LoadingManager } from './loaders.js';
-import { sceneInit } from './world.js';
+import { sceneInit, sky } from './world.js';
 import { update } from './update.js';
 
 class Scene {
@@ -10,9 +10,9 @@ class Scene {
         this.loadingManager = new LoadingManager();
         this.init();
         this.setupControls();
-        this.setupAudio();
         this.setupEventListeners();
         sceneInit(this.scene, this.loadingManager);
+        this.setupAudio();
         this.animate();
     }
 
@@ -256,7 +256,18 @@ class Scene {
     }
 
     setupAudio() {
-        this.backgroundMusic = new Audio('modelos/01ambienteparque01.wav');
+        const night = new Array(13).fill(false);
+        // Manuelamente, no tiene algortimo
+        night[1] = true;
+        night[5] = true;
+        night[9] = true;
+        night[10] = true;
+        night[12] = true;
+        if (night[sky]) {
+            this.backgroundMusic = new Audio('modelos/ambience-night-field-cricket-01-7015.mp3');
+        } else {
+            this.backgroundMusic = new Audio('modelos/01ambienteparque01.wav');
+        }
         this.backgroundMusic.loop = true;
         this.backgroundMusic.volume = 0.2;
         this.audioInitialized = false;
