@@ -1345,7 +1345,7 @@ export function sceneInit(scene, loadingManager) {
             this.animateTrees();
             this.animateBirds();
             this.animateClouds();
-            this.animateButterflies();
+            this.animateButterflies(deltaTime);
             this.animatePollenParticles();
             
             requestAnimationFrame(() => this.animate());
@@ -1501,7 +1501,7 @@ export function sceneInit(scene, loadingManager) {
             });
         },
         
-        animateButterflies: function() {
+        animateButterflies: function(deltaTime) {
             STATE.butterflies.forEach(butterfly => {
                 const userData = butterfly.userData;
                 
@@ -1512,7 +1512,7 @@ export function sceneInit(scene, loadingManager) {
                     );
                     
                     direction.normalize();
-                    direction.multiplyScalar(userData.speed);
+                    direction.multiplyScalar(userData.speed * deltaTime * 20);
                     
                     butterfly.position.add(direction);
                     
@@ -1537,13 +1537,13 @@ export function sceneInit(scene, loadingManager) {
                         userData.currentTarget = (userData.currentTarget + 1) % userData.waypoints.length;
                         userData.targetPosition.copy(userData.waypoints[userData.currentTarget]);
                         
-                        if (Math.random() < 0.3) {
+                        if (Math.random() < 0.9) {
                             userData.isWaiting = true;
                             userData.waitTime = 0;
                         }
                     }
                     
-                    const baseFlapSpeed = 10;
+                    const baseFlapSpeed = 100;
                     
                     const speedFactor = direction.length() * 20;
                     const flapSpeed = baseFlapSpeed + speedFactor;
