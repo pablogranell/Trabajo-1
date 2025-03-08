@@ -723,8 +723,21 @@ export function sceneInit(scene, loadingManager) {
                     normalMap: normalTexture,
                     roughnessMap: roughnessTexture,
                     roughness: 1.0,
-                    metalness: 0.0
+                    metalness: 0.0,
+                    emissive: new THREE.Color(0x88ffaa),
+                    emissiveIntensity: 0.1
                 });
+                
+                child.onBeforeRender = function(renderer, scene, camera) {
+                    const cameraPosition = new THREE.Vector3();
+                    camera.getWorldPosition(cameraPosition);
+                    const objectPosition = new THREE.Vector3();
+                    child.getWorldPosition(objectPosition);
+                    const viewDirection = new THREE.Vector3().subVectors(cameraPosition, objectPosition).normalize();
+                    const normal = new THREE.Vector3(0, 1, 0);
+                    const fresnelFactor = Math.pow(1.0 - Math.abs(normal.dot(viewDirection)), 4.0);
+                    material.emissiveIntensity = 0.1 + fresnelFactor * 0.5;
+                };
                 
                 child.material = material;
                 child.castShadow = true;
