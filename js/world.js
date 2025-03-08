@@ -10,7 +10,7 @@ const CONFIG = {
     },
     
     COUNTS: {
-        GRASS_INSTANCES_MAX: 10000,
+        GRASS_INSTANCES_MAX: 1000,
         TREE_COUNT: 50,
         FLOWER_COUNT: 150,
         BIRD_COUNT: 10,
@@ -63,7 +63,7 @@ const CONFIG = {
         CLOUD_MOVEMENT_SPEED_MIN: 0.002,
         CLOUD_MOVEMENT_SPEED_MAX: 0.02,
         BIRD_SPEED_MIN: 0.0005,
-        BIRD_SPEED_MAX: 0.005,
+        BIRD_SPEED_MAX: 0.0025,
         BUTTERFLY_SPEED_MIN: 0.01,
         BUTTERFLY_SPEED_MAX: 0.05
     },
@@ -1317,13 +1317,17 @@ export function sceneInit(scene, loadingManager) {
 
 
     const AnimationController = {
+        lastFrameTime: performance.now(),
         animate: function() {
-            STATE.time += 0.05;
+            const currentTime = performance.now();
+            const deltaTime = (currentTime - this.lastFrameTime) / 1000;
+            this.lastFrameTime = currentTime;
+            
+            STATE.time += deltaTime;
             
             // FPS Counter update
             if (STATE.fpsCounter.enabled) {
                 STATE.fpsCounter.frames++;
-                const currentTime = performance.now();
                 const elapsedTime = currentTime - STATE.fpsCounter.lastTime;
                 
                 if (elapsedTime >= 1000) {
@@ -1427,7 +1431,7 @@ export function sceneInit(scene, loadingManager) {
             STATE.birds.forEach(bird => {
                 const userData = bird.userData;
                 
-                userData.angle += userData.speed;
+                userData.angle += userData.speed * STATE.time * 0.05;
                 bird.position.x = Math.cos(userData.angle) * userData.radius * 3;
                 bird.position.z = Math.sin(userData.angle) * userData.radius * 3;
                 bird.position.y = userData.height + Math.sin(userData.angle * 2) * 0.5;
@@ -1443,31 +1447,33 @@ export function sceneInit(scene, loadingManager) {
         },
         
         animateClouds: function() {
+            const deltaTime = (performance.now() - this.lastFrameTime) / 1000; // Tiempo en segundos
+            
             STATE.clouds.forEach(cloud => {
                 const userData = cloud.userData;
                 
                 switch(userData.cloudType) {
                     case 0:
-                        cloud.position.x += userData.direction.x * userData.speed;
-                        cloud.position.z += userData.direction.z * userData.speed * 0.7;
+                        cloud.position.x += userData.direction.x * userData.speed * deltaTime;
+                        cloud.position.z += userData.direction.z * userData.speed * 0.7 * deltaTime;
                         cloud.position.y = userData.initialPosition.y + Math.sin(STATE.time * 0.03) * 0.3;
                         break;
                         
                     case 1:
-                        cloud.position.x += userData.direction.x * userData.speed * (0.8 + Math.sin(STATE.time * 0.1) * 0.2);
-                        cloud.position.z += userData.direction.z * userData.speed * (0.8 + Math.cos(STATE.time * 0.15) * 0.2);
+                        cloud.position.x += userData.direction.x * userData.speed * (0.8 + Math.sin(STATE.time * 0.1) * 0.2) * deltaTime;
+                        cloud.position.z += userData.direction.z * userData.speed * (0.8 + Math.cos(STATE.time * 0.15) * 0.2) * deltaTime;
                         cloud.position.y = userData.initialPosition.y + Math.sin(STATE.time * 0.04 + cloud.position.x * 0.01) * 0.5;
                         break;
                         
                     case 2:
-                        cloud.position.x += userData.direction.x * userData.speed * 0.3;
-                        cloud.position.z += userData.direction.z * userData.speed * 0.3;
+                        cloud.position.x += userData.direction.x * userData.speed * 0.3 * deltaTime;
+                        cloud.position.z += userData.direction.z * userData.speed * 0.3 * deltaTime;
                         cloud.position.y = userData.initialPosition.y + Math.sin(STATE.time * 0.02 + cloud.position.z * 0.02) * 0.7;
                         break;
                         
                     case 3:
-                        cloud.position.x += userData.direction.x * userData.speed * 0.6;
-                        cloud.position.z += userData.direction.z * userData.speed * 0.6;
+                        cloud.position.x += userData.direction.x * userData.speed * 0.6 * deltaTime;
+                        cloud.position.z += userData.direction.z * userData.speed * 0.6 * deltaTime;
                         const pulse = 1 + Math.sin(STATE.time * userData.pulseSpeed) * userData.pulseAmount;
                         cloud.scale.x = cloud.userData.originalScale * pulse;
                         cloud.scale.z = cloud.userData.originalScale * pulse;
@@ -1581,9 +1587,9 @@ export function sceneInit(scene, loadingManager) {
             const sizeAttribute = pollenSystem.geometry.attributes.size.array;
             
             for (let i = 0; i < positions.length / 3; i++) {
-                positions[i * 3] += velocities[i].x + Math.sin(STATE.time * 0.5 + i) * 0.003;
-                positions[i * 3 + 1] += velocities[i].y + Math.cos(STATE.time * 0.3 + i) * 0.003;
-                positions[i * 3 + 2] += velocities[i].z + Math.sin(STATE.time * 0.4 + i) * 0.003;
+                positions[i * 3] += (velocities[i].x + Math.sin(STATE.time * 0.5 + i) * 0.0003) * STATE.time * 0.005;
+                positions[i * 3 + 1] += (velocities[i].y + Math.cos(STATE.time * 0.3 + i) * 0.0003) * STATE.time * 0.005;
+                positions[i * 3 + 2] += (velocities[i].z + Math.sin(STATE.time * 0.4 + i) * 0.0003) * STATE.time * 0.005;
                 
                 const sizePulse = 0.8 + 0.2 * Math.sin(STATE.time * 0.2 + i * 0.1);
                 sizeAttribute[i] = originalSizes[i] * sizePulse;
