@@ -877,7 +877,7 @@ export function sceneInit(scene, loadingManager) {
     function createBird() {
         const bird = new THREE.Group();
         
-        const bodyGeometry = new THREE.SphereGeometry(0.1, 8, 6);
+        const bodyGeometry = new THREE.SphereGeometry(0.05, 8, 6);
         const bodyMaterial = new THREE.MeshStandardMaterial({
             color: 0xffffff,
             roughness: 0.7
@@ -885,7 +885,28 @@ export function sceneInit(scene, loadingManager) {
         const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
         bird.add(body);
         
-        const wingGeometry = new THREE.PlaneGeometry(0.3, 0.15);
+        // Crear alas más redondeadas y naturales usando ShapeGeometry
+        const wingShape = new THREE.Shape();
+        
+        // Dibujar la forma del ala con curvas para hacerla más redondeada
+        wingShape.moveTo(0, 0);
+        wingShape.bezierCurveTo(
+            0.1, 0.02,
+            0.2, 0.05,
+            0.3, 0.02
+        );
+        wingShape.bezierCurveTo(
+            0.25, 0.1,
+            0.15, 0.15,
+            0, 0.1
+        );
+        wingShape.bezierCurveTo(
+            -0.05, 0.05,
+            -0.05, 0.02,
+            0, 0
+        );
+        
+        const wingGeometry = new THREE.ShapeGeometry(wingShape);
         const wingMaterial = new THREE.MeshStandardMaterial({
             color: 0xffffff,
             roughness: 0.7,
@@ -893,11 +914,14 @@ export function sceneInit(scene, loadingManager) {
         });
         
         const leftWing = new THREE.Mesh(wingGeometry, wingMaterial);
-        leftWing.position.set(-0.15, 0, 0);
+        leftWing.position.set(-0.1, 0, 0);
+        leftWing.rotation.z = Math.PI * 0.1;
         bird.add(leftWing);
         
-        const rightWing = new THREE.Mesh(wingGeometry, wingMaterial);
-        rightWing.position.set(0.15, 0, 0);
+        const rightWing = new THREE.Mesh(wingGeometry.clone(), wingMaterial);
+        rightWing.position.set(0.1, 0, 0);
+        rightWing.rotation.z = -Math.PI * 0.1;
+        rightWing.scale.x = -1; // Invertir el ala derecha
         bird.add(rightWing);
         
         const tailGeometry = new THREE.ConeGeometry(0.05, 0.15, 4);
