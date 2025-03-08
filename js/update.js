@@ -1,11 +1,14 @@
 const GRAVITY = 9.8;
-const MOVE_SPEED = 50;
+const MOVE_SPEED = 12;
+const MAX_DELTA = 0.1; // Máximo delta tiempo permitido (Evista saltos en bajos FPS)
+const FRICTION = 0.9; // Factor de fricción para reducir la velocidad
 
 export function update(scene) {
     if (scene.isPaused) return;
     
     const time = performance.now();
-    const delta = (time - scene.prevTime) / 1000;
+    // Limitar el delta tiempo para evitar saltos en bajos FPS
+    const delta = Math.min((time - scene.prevTime) / 1000, MAX_DELTA);
     scene.prevTime = time;
 
     if (scene.isSitting) {
@@ -14,8 +17,8 @@ export function update(scene) {
         return;
     }
 
-    scene.velocity.x *= (10 * delta);
-    scene.velocity.z *= (10 * delta);
+    scene.velocity.x *= Math.pow(FRICTION, delta * 60);
+    scene.velocity.z *= Math.pow(FRICTION, delta * 60);
     scene.velocity.y -= GRAVITY * delta;
 
     if (scene.moveForward || scene.moveBackward || scene.moveLeft || scene.moveRight) {
@@ -27,6 +30,7 @@ export function update(scene) {
     }
 
     const position = scene.camera.position;
+    // Usar delta tiempo limitado para mover la cámara de forma suave
     scene.controls.moveRight(-scene.velocity.x * delta);
     scene.controls.moveForward(-scene.velocity.z * delta);
     
@@ -34,8 +38,10 @@ export function update(scene) {
                          Math.sin(position.x * 0.2) * Math.cos(position.z * 0.3);
     const minHeight = groundHeight + scene.standingHeight;
     
+    // Suavizar la transición para la altura también
     position.y = Math.max(minHeight, position.y + scene.velocity.y * delta);
-    if (position.y === minHeight) {
+    if (position.y <= minHeight + 0.01) { // pequeña tolerancia para evitar rebote
+        position.y = minHeight;
         scene.velocity.y = 0;
     }
 

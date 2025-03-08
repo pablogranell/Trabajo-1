@@ -10,7 +10,7 @@ const CONFIG = {
     },
     
     COUNTS: {
-        GRASS_INSTANCES_MAX: 100000,
+        GRASS_INSTANCES_MAX: 10000,
         TREE_COUNT: 50,
         FLOWER_COUNT: 150,
         BIRD_COUNT: 10,
