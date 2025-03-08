@@ -14,7 +14,7 @@ const CONFIG = {
         TREE_COUNT: 50,
         FLOWER_COUNT: 150,
         BIRD_COUNT: 10,
-        BUTTERFLY_COUNT: 10,
+        BUTTERFLY_COUNT: 50,
         CLOUD_COUNT: 100,
         POLLEN_PARTICLES_COUNT: 1000
     },
@@ -927,7 +927,7 @@ export function sceneInit(scene, loadingManager) {
 
     const birds = [];
     const night = new Array(13).fill(false);
-        // Manuelamente, no tiene algortimo
+        // Manualmente, no tiene algortimo
         night[1] = true;
         night[5] = true;
         night[9] = true;
@@ -1040,44 +1040,22 @@ export function sceneInit(scene, loadingManager) {
             secondaryColor = new THREE.Color().setHSL((hue + 0.5) % 1, 0.4, 0.6);
         }
         
-        const bodyGeometry = new THREE.CylinderGeometry(0.015, 0.02, 0.1, 8);
+        const bodyGeometry = new THREE.CylinderGeometry(0.01, 0.01, 0.1, 8);
         const bodyMaterial = new THREE.MeshStandardMaterial({
             color: 0x222222,
             roughness: 0.8
         });
         const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-        body.rotation.x = Math.PI / 2;
         butterfly.add(body);
         
-        const headGeometry = new THREE.SphereGeometry(0.02, 8, 8);
+        const headGeometry = new THREE.SphereGeometry(0.015, 8, 8);
         const headMaterial = new THREE.MeshStandardMaterial({
             color: 0x303030,
             roughness: 0.7
         });
         const head = new THREE.Mesh(headGeometry, headMaterial);
-        head.position.set(0, 0, -0.05);
+        head.position.set(0, 0.05, 0);
         butterfly.add(head);
-        
-        const antennaMaterial = new THREE.MeshStandardMaterial({
-            color: 0x222222,
-            roughness: 0.9
-        });
-        
-        for (let i = 0; i < 2; i++) {
-            const antennaGeometry = new THREE.CylinderGeometry(0.002, 0.001, 0.08, 4);
-            const antenna = new THREE.Mesh(antennaGeometry, antennaMaterial);
-            antenna.position.set((i === 0 ? -1 : 1) * 0.01, 0.01, -0.08);
-            antenna.rotation.x = -Math.PI / 4;
-            antenna.rotation.z = (i === 0 ? 1 : -1) * Math.PI / 8;
-            butterfly.add(antenna);
-            
-            const tipGeometry = new THREE.SphereGeometry(0.004, 4, 4);
-            const tip = new THREE.Mesh(tipGeometry, antennaMaterial);
-            tip.position.copy(antenna.position);
-            tip.position.y += 0.03;
-            tip.position.z -= 0.06;
-            butterfly.add(tip);
-        }
         
         function createWing(isLeft) {
             const wingGroup = new THREE.Group();
@@ -1143,49 +1121,6 @@ export function sceneInit(scene, loadingManager) {
             
             const lowerWing = new THREE.Mesh(lowerWingGeometry, lowerWingMaterial);
             
-            if (Math.random() < 0.7) {
-                const patternCount = Math.floor(Math.random() * 3) + 1;
-                
-                for (let i = 0; i < patternCount; i++) {
-                    if (Math.random() < 0.5) {
-                        const patternGeometry = new THREE.CircleGeometry(0.01 + Math.random() * 0.02, 8);
-                        const patternMaterial = new THREE.MeshBasicMaterial({
-                            color: Math.random() < 0.5 ? 0x000000 : 0xffffff,
-                            transparent: true,
-                            opacity: 0.7,
-                            side: THREE.DoubleSide
-                        });
-                        
-                        const pattern = new THREE.Mesh(patternGeometry, patternMaterial);
-                        pattern.position.set(
-                            0.05 + Math.random() * 0.08,
-                            0.03 + Math.random() * 0.08,
-                            0.001
-                        );
-                        
-                        upperWing.add(pattern);
-                    } else {
-                        const lineGeometry = new THREE.PlaneGeometry(0.02 + Math.random() * 0.04, 0.005);
-                        const lineMaterial = new THREE.MeshBasicMaterial({
-                            color: Math.random() < 0.5 ? 0x000000 : 0xffffff,
-                            transparent: true,
-                            opacity: 0.7,
-                            side: THREE.DoubleSide
-                        });
-                        
-                        const line = new THREE.Mesh(lineGeometry, lineMaterial);
-                        line.position.set(
-                            0.05 + Math.random() * 0.08,
-                            0.03 + Math.random() * 0.08,
-                            0.001
-                        );
-                        line.rotation.z = Math.random() * Math.PI;
-                        
-                        upperWing.add(line);
-                    }
-                }
-            }
-            
             wingGroup.add(upperWing);
             wingGroup.add(lowerWing);
             
@@ -1224,7 +1159,7 @@ export function sceneInit(scene, loadingManager) {
     }
     
     const butterflies = [];
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < CONFIG.COUNTS.BUTTERFLY_COUNT; i++) {
         const butterfly = createButterfly();
         
         if (STATE.flowers.length > 0) {
